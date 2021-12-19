@@ -5,7 +5,7 @@ Commands:
 1. git clone https://github.com/ChrisWilkin/COMP0088-CW2.git - clones this repository to the working directory
 2. git add <filename> - adds the files specified to the commit group
 3. git commit -m "<description>" - commits the specified fiels to the local repository with the description message inputted
-4. git commit - will promt for a multiline message. To escape, press ESC W Q : ENTER (i think)
+4. git commit - will promt for a multiline message. To escape, press ESC COLON(:) W Q ENTER (i think)
 5. git push - uploads local changes to GitHub
 6. git pull - downloads the latest version from GitHub
 7. git branch <branch name> - creates new branch, seperate from the main timeline, that you can make changes to without affecting the main branch
