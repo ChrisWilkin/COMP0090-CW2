@@ -14,4 +14,4 @@ Commands:
 10. git merge <branch> - merges the specified branch with the main branch. PLEASE CHECK WITH EVERYONE ELSE IN THE TEAM BEFORE DOING THIS!!!
 11. git - provides a list of all commands and their functions
 
-If you have any questions about this let me know on WhatsApp
+If you have any questions about this let me know on WhatsApp!!
