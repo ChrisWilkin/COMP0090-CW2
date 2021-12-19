@@ -2,7 +2,7 @@
 Repository for the Group Coursework component of COMP0088, UCL, 2021/2022
 
 Commands:
-1. git clone https://github.com/ChrisWilkin/COMP0088-CW2.git - clones this repository to the working directory
+1. git clone https://github.com/ChrisWilkin/COMP0090-CW2.git - clones this repository to the working directory
 2. git add <filename> - adds the files specified to the commit group
 3. git commit -m "<description>" - commits the specified fiels to the local repository with the description message inputted
 4. git commit - will promt for a multiline message. To escape, press ESC COLON(:) W Q ENTER (i think)
