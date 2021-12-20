@@ -22,10 +22,9 @@ def load_data_from_h5(path):
     '''
     with h5.File(path, 'r') as file:
         key = list(file.keys())[0]
-        elems = file[key]
+        elems = file.get(key)[:]
+
     return elems
-
-
 
 TEST = {'images': load_data_from_h5(paths('test', 'images.h5')), 
         'bboxes': load_data_from_h5(paths('test', 'bboxes.h5')), 

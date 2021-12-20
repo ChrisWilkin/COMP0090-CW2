@@ -19,7 +19,7 @@ num_samples = 256
 
 
 class PetSegmentationDataSet(Dataset):
-    def __init__(self, data, mask=True, bbox=True, bin=True):
+    def __init__(self, mask=True, bbox=True, bin=True):
         '''
         Data: Dictionary of Images, BBoxes, Binary, Masks
         mask: whether to include mask data in dataset
@@ -30,15 +30,10 @@ class PetSegmentationDataSet(Dataset):
         self.mask = mask
         self.bbox = bbox
         self.bin = bin
-        self.data = data
-        if not self.mask:
-            self.data = self.data.pop('masks', None)
-        if not self.bbox:
-            self.data = self.data.pop('bboxes', None)
-        if not self.bin:
-            self.data = self.data.pop('binary', None)
+    
         
         for key in self.data.keys():
+            print(self.data[key])
             self.data[key] = torch.tensor(self.data[key])
 
 
@@ -57,4 +52,4 @@ class PetSegmentationDataSet(Dataset):
 
 
 dataset = PetSegmentationDataSet(TEST, False, False, True)
-  
+
