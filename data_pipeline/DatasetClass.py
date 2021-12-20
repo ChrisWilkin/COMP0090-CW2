@@ -46,9 +46,13 @@ class PetSegmentationDataSet(Dataset):
     def __len__(self):
         return len(self.data['images'])
 
-    def __getitem__(self, idx):
+    def __getitem__(self, ind):
+        if torch.is_tensor(ind):
+            ind = ind.tolist()
         
-
+        sample = {}
+        for key in self.data.keys():
+            sample[key] = self.data[key][ind]
 
         return sample
     
