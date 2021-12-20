@@ -15,29 +15,17 @@ def paths(folder, file):
     p = f'{PATH}/{folder}/{file}'
     return p
 
-def load_data_from_h5(path):
+def load_data_from_h5(folder, file):
     '''
     opens h5 file and returns contents (shape = 256x256x3)
     (these files all only have one key)
     '''
+    path = paths(folder, file)
     with h5.File(path, 'r') as file:
         key = list(file.keys())[0]
         elems = file.get(key)[:]
 
     return elems
 
-TEST = {'images': load_data_from_h5(paths('test', 'images.h5')), 
-        'bboxes': load_data_from_h5(paths('test', 'bboxes.h5')), 
-        'binary': load_data_from_h5(paths('test', 'binary.h5')),
-        'masks': load_data_from_h5(paths('test', 'masks.h5'))}
-        
-TRAIN = {'images': load_data_from_h5(paths('train', 'images.h5')), 
-        'bboxes': load_data_from_h5(paths('train', 'bboxes.h5')), 
-        'binary': load_data_from_h5(paths('train', 'binary.h5')),
-        'masks': load_data_from_h5(paths('train', 'masks.h5'))}
-        
-VAL = {'images': load_data_from_h5(paths('val', 'images.h5')), 
-        'bboxes': load_data_from_h5(paths('val', 'bboxes.h5')), 
-        'binary': load_data_from_h5(paths('val', 'binary.h5')),
-        'masks': load_data_from_h5(paths('val', 'masks.h5'))}
+
 
