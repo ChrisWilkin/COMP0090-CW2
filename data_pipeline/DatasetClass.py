@@ -54,9 +54,8 @@ class PetSegmentationDataSet(Dataset):
         print(f'Finished Loading Data ({time.time() - t:.2f}s)')
         return data
 
-assert 'test' in ['test', 'hi']
-dataset = PetSegmentationDataSet('test', 'mask')
 
+dataset = PetSegmentationDataSet('test', 'mask')
 dataloader = DataLoader(dataset, batch_size=1, shuffle=True, num_workers=0)
 print(dataset.__len__())
 
