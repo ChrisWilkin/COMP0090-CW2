@@ -2,11 +2,11 @@
 Repository for the Group Coursework component of COMP0090, UCL, 2021/2022
 
    
-##Link to dataset:
-  https://weisslab.cs.ucl.ac.uk/WEISSTeaching/datasets/-/tree/oxpet/
-##The folder system matches what we have in our repository, 
-##so just put the .h5 files in the respective git folders 
-##on your local system
+#Link to dataset:
+https://weisslab.cs.ucl.ac.uk/WEISSTeaching/datasets/-/tree/oxpet/
+#The folder system matches what we have in our repository, 
+#so just put the .h5 files in the respective git folders 
+#on your local system
 
 Commands:
 1. git clone https://github.com/ChrisWilkin/COMP0090-CW2.git - clones this repository to the working directory
