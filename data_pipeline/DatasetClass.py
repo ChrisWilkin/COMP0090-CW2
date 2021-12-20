@@ -4,7 +4,6 @@ Created 19:15 21/12/2021 by Christopher Wilkin
 Dataloader file containing all methods and functions relating to loading data...
 '''
 
-from genericpath import sameopenfile
 import h5py
 import os
 import numpy as np
@@ -55,4 +54,7 @@ class PetSegmentationDataSet(Dataset):
             sample[key] = self.data[key][ind]
 
         return sample
-    
+
+
+dataset = PetSegmentationDataSet(TEST, False, False, True)
+  
