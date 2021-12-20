@@ -11,9 +11,13 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import pandas as pd
 
+h5_save_path = r"datasets/"
+num_samples = 256
+
+
 
 class PetSegmentationDataSet(Dataset):
-    def __init__(self):
+    def __init__(self, path, image=True, mask=True, bbox=True, bin=True):
         super().__init__()
 
     def __len__(self):
