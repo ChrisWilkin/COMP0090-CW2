@@ -2,7 +2,6 @@ import h5py as h5
 import os
 
 PATH = f'{os.path.dirname(__file__)[:-14]}/datasets'
-print(PATH)
 HEIGHT = 256
 WIDTH = 256
 
