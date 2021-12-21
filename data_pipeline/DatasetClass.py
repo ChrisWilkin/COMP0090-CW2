@@ -3,6 +3,15 @@ Created 19:15 21/12/2021 by Christopher Wilkin
 
 Dataloader file containing all methods and functions relating to loading data...
 '''
+
+'''
+TO DO:
+1. Look at coverting each file's data to correct foramt (i.e. tensors in NHWC)
+2. add visualisation of images and labels
+3. modify def __len__() to give comprehensive description of file lengths and data shapes etc.
+
+'''
+
 import torch
 from torch.utils.data import Dataset, DataLoader, dataloader
 import DataUtils
