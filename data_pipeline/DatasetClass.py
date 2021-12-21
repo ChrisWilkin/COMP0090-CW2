@@ -9,7 +9,7 @@ TO DO:
 1. Look at coverting each file's data to correct foramt (i.e. tensors in NHWC)
 2. add visualisation of images and labels
 3. modify def __len__() to give comprehensive description of file lengths and data shapes etc.
-
+4. can we combine all the h5 files into one? Is it faster?
 '''
 
 import torch
