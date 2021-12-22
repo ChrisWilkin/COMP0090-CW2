@@ -37,21 +37,10 @@ def load_data_from_h5(folder, file):
 
 PATH_OG = f'{os.path.dirname(__file__)[:-14]}/Datasets/CompleteDataset'
 
-def array_from_jpg(file_name):
-    '''
-    Opens a .jpg file and returns a numpy array of H x W x C
-    '''
-    file = Image.open(file_name)
-    try:
-        pix = np.array(file.getdata()).reshape(file.size[0], file.size[1], 3)
-    except:
-        print(f'Failed to convert {file_name} to array!')
-        pix = []
-    file.close()
-    return pix
-
 def add_margin(img, top, right, bottom, left, color):
-    assert isinstance(img, Image), 'Incorrect data type'
+    '''
+    adds black margin with thicknesses specified for each side
+    '''
 
     width, height = img.size
     new_width = width + right + left
@@ -65,14 +54,52 @@ def crop_image(img, height, width):
     crops input image(PIL Image) to size height x width.
     If image is smaller than these dimensions, it is padded with black (zeros)
     '''
+    print(img.size)
+    if img.size[0] < width or img.size[1] < height:
+        w_diff = width - img.size[0]
+        h_diff = height - img.size[1]
+        w_diff = (np.abs(w_diff) + w_diff) / 2 # zero if wdiff -ve , unchanged if wdiff +ve
+        h_diff = (np.abs(h_diff) + h_diff) / 2    
+        right = math.ceil(w_diff / 2) 
+        left = math.floor(w_diff / 2)
+        top = math.ceil(h_diff / 2) 
+        bottom = math.floor(h_diff / 2)
+        img = add_margin(img, top, right, bottom, left, (0,0,0))
+        print(img.size)
     
+    w_diff = img.size[0] - width
+    h_diff = img.size[1] - height  
+    print(w_diff, h_diff) 
+    right = img.size[0] - math.ceil(w_diff / 2) 
+    left = math.floor(w_diff / 2)
+    top = math.ceil(h_diff / 2) 
+    bottom = img.size[1] - math.floor(h_diff / 2)
+    print(top, bottom, left, right)
+    img = img.crop((left, top, right, bottom))
+    print(img.size)
+    img.show()
 
     return img
 
-x = np.array([[1,2,3], [4,5,6],[7,8,9]])
-print(x)
-y = crop_image(x, 1, 8)
-print(y)
+
+def array_from_jpg(file_name, crop):
+    '''
+    Opens a .jpg file and returns a numpy array of H x W x C
+    '''
+    file = Image.open(file_name)
+    if crop is not None:
+        file = crop_image(file, crop[0], crop[1])
+
+    try:
+        pix = np.array(file.getdata()).reshape(file.size[0], file.size[1], 3)
+    except:
+        print(f'Failed to convert {file_name} to array!')
+        pix = []
+    file.close()
+    return pix
+
+
+
 
 def load_data(folder, test_train_val=None, indices=None, crop_size=None):
     '''
@@ -106,11 +133,8 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
             file_names = [file_names[i] for i in indices]   # if indices listed, apply this
 
         for i, name in enumerate(file_names):
-            data.append(array_from_jpg(paths(path, name)))  # load numpy array in for every filename
+            data.append(array_from_jpg(paths(path, name), crop_size))  # load numpy array in for every filename
             # array is in WxHxC format
-
-        for img in data:
-            crop_image(img, 1,1)
 
 
     elif folder == 'masks':
@@ -125,12 +149,11 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
 
 
 
-'''
-TEST CODE
+
+#TEST CODE
 
 
 ind = np.array([1])
 assert isinstance(ind, np.ndarray)
-x = load_data('images', indices=ind)
+x = load_data('images', indices=ind, crop_size=np.array([250, 600]))
 
-'''
