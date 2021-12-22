@@ -141,12 +141,7 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
     return data
 
 
-
-
-
 #TEST CODE
-
-
 ind = np.array([1])
 assert isinstance(ind, np.ndarray)
 x = load_data('images', indices=ind, crop_size=np.array([250, 600]))
