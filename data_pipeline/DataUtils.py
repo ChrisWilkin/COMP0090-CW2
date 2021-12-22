@@ -1,10 +1,8 @@
 import h5py as h5
 import os
 import numpy as np
-import PIL
 from PIL import Image
 import math
-
 from numpy.testing._private.utils import print_assert_equal
 
 PATH = f'{os.path.dirname(__file__)[:-14]}/Datasets'
@@ -81,7 +79,6 @@ def crop_image(img, height, width):
 
     return img
 
-
 def array_from_jpg(file_name, crop):
     '''
     Opens a .jpg file and returns a numpy array of H x W x C
@@ -97,9 +94,6 @@ def array_from_jpg(file_name, crop):
         pix = []
     file.close()
     return pix
-
-
-
 
 def load_data(folder, test_train_val=None, indices=None, crop_size=None):
     '''
