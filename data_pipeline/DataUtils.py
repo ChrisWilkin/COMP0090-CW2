@@ -128,6 +128,8 @@ def array_from_png(file_name, crop=None):
 
     if crop is not None:
         pix = crop_mask(pix, crop[0], crop[1])
+    
+    pix = pix[:, :, None]
 
     return pix
 
@@ -196,6 +198,7 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
         path = paths(PATH_OG, 'annotations')
 
     return data
+
 
 
 ind = np.array([1])
