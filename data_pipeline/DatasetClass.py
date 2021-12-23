@@ -93,6 +93,7 @@ class PetSegmentationDataSet(Dataset):
         
         # remove one of these
         fig.show()
+        plt.savefig('Dataset Visualisation.png')
         #plt.show()
         
 
