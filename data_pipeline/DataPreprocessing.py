@@ -199,6 +199,8 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
 
         for i, name in enumerate(file_names):
             data.append(array_from_jpg(paths(path, name), crop_size))  # load numpy array in for every filename
+            if (i+1) % 50 == 0:
+                print(f'Loaded {i+1} / {len(file_names)}')
             # array is in WxHxC format
 
     elif folder == 'masks':
@@ -206,12 +208,18 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
         file_names = get_files(path, 'png', indices)
         for i, name in enumerate(file_names):
             data.append(array_from_png(paths(path, name), crop_size))
+            if (i+1) % 50 == 0:
+                print(f'Loaded {i+1} / {len(file_names)}')
+            # array is in WxHxC format
 
     elif folder == 'bboxes':
         path = paths(PATH_OG, 'annotations', 'xmls')
         file_names = get_files(path, 'xml', indices)
         for i, name in enumerate(file_names):
             data.append(coords_from_xml(paths(path, name), crop_size))
+            if (i+1) % 50 == 0:
+                print(f'Loaded {i+1} / {len(file_names)}')
+            # array is in WxHxC format
 
     elif folder == 'bins':
         path = paths(PATH_OG, 'annotations', 'list.txt')
