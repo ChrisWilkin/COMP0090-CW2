@@ -95,6 +95,9 @@ def crop_mask(img, height, width):
 
 
 def array_from_png(file_name, crop=None):
+    '''
+    converts png file to numpy array, with cropping / padding
+    '''
     file = Image.open(file_name)
     try:
         pix = np.array(file.getdata()).reshape(file.size[0], file.size[1])
