@@ -95,6 +95,16 @@ def array_from_jpg(file_name, crop=None):
     file.close()
     return pix
 
+def array_from_png(file_name, crop=None):
+    file = Image.open(file_name)
+    if crop is not None:
+        file = crop_image(file, crop[0], crop[1])
+    try:
+        pix = np.asarray(file)
+    except:
+        print(f'Failed to convert {file_name} to array!')
+    return pix
+
 def get_files(path, extension=None, ind=None):
     '''
     Give a path to a folder, a file extension to check for, and an optional list of indices, 
@@ -143,7 +153,7 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
         path = paths(PATH_OG, 'annotations', 'trimaps')
         file_names = get_files(path, 'png', indices)
         for i, name in enumerate(file_names):
-            data.append(array_from_jpg(paths(path, name)))
+            data.append(array_from_png(paths(path, name)))
 
     elif folder == 'bboxes':
         path = paths(PATH_OG, 'annotations', 'xmls')
