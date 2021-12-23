@@ -79,7 +79,7 @@ def crop_image(img, height, width):
 
     return img
 
-def array_from_jpg(file_name, crop):
+def array_from_jpg(file_name, crop=None):
     '''
     Opens a .jpg file and returns a numpy array of H x W x C
     '''
@@ -94,6 +94,19 @@ def array_from_jpg(file_name, crop):
         pix = []
     file.close()
     return pix
+
+def get_files(path, extension=None, ind=None):
+    '''
+    Give a path to a folder, a file extension to check for, and an optional list of indices, 
+    this returns the name of all files in the folder.
+    '''
+    file_names = np.array(next(os.walk(path), (None, None, []))[2])  # list of file names in folder
+    if extension is not None:
+        exts = [file_names[i][-3:] == extension for i in range(len(file_names))] #ignore any non .jpg files
+        file_names = file_names[exts]
+    if ind is not None:
+        file_names = [file_names[i] for i in ind]   # if indices listed, apply this
+    return file_names
 
 def load_data(folder, test_train_val=None, indices=None, crop_size=None):
     '''
@@ -120,19 +133,18 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
 
     if folder == 'images':
         path = paths(PATH_OG, 'images') #path to images folder
-        file_names = np.array(next(os.walk(path), (None, None, []))[2])  # list of file names in folder
-        jpgs = [file_names[i][-3:] == 'jpg' for i in range(len(file_names))] #ignore any non .jpg files
-        file_names = file_names[jpgs]
-        if indices is not None:
-            file_names = [file_names[i] for i in indices]   # if indices listed, apply this
+        file_names = get_files(path, 'jpg', indices)
 
         for i, name in enumerate(file_names):
             data.append(array_from_jpg(paths(path, name), crop_size))  # load numpy array in for every filename
             # array is in WxHxC format
 
-
     elif folder == 'masks':
         path = paths(PATH_OG, 'annotations', 'trimaps')
+        file_names = get_files(path, 'png', indices)
+        for i, name in enumerate(file_names):
+            data.append(array_from_jpg(paths(path, name)))
+
     elif folder == 'bboxes':
         path = paths(PATH_OG, 'annotations', 'xmls')
     elif folder == 'bins':
@@ -144,5 +156,6 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
 #TEST CODE
 ind = np.array([1])
 assert isinstance(ind, np.ndarray)
-x = load_data('images', indices=ind, crop_size=np.array([250, 600]))
+x = load_data('masks', indices=ind)
+print(x)
 
