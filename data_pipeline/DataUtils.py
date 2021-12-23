@@ -50,6 +50,8 @@ def save_h5(images, masks, bboxes, bins,path, group_names):
         mask_set = group.create_dataset("masks", data=masks[i].astype(np.float32), compression="gzip")
         bbox_set = group.create_dataset("bboxes", data=bboxes[i].astype(np.float32), compression="gzip")
         bin_set = group.create_dataset("binary", data=bins[i].astype(np.float32), compression="gzip")
+    
+    return
         
         
 def load_group_h5(path,group_name):
