@@ -32,3 +32,40 @@ def load_data_from_h5(folder, file):
 
     return elems
 
+
+### save individual arrays into h5 file as group
+def save_h5(images, masks, bboxes, bins,path, group_names):
+    '''
+    images: list of image arrays [train_images, test_images, val_images]
+    masks: list of mask arrays [train_masks, test_masks, val_masks]
+    bboxes: list of bbox arrays [train_bboxes, test_bboxes, val_bboxes]
+    bins: list of bin arrays [train_bins, test_bins, val_bins]
+    path: file path for h5 file
+    group_names: list of group_names [train, test, val]
+    '''
+    f = h5.File(path, "w")
+    for i in range(len(group_names)):
+        group = f.create_group(group_names[i])
+        image_set = group.create_dataset("images", data=images[i].astype(np.float32), compression="gzip")
+        mask_set = group.create_dataset("masks", data=masks[i].astype(np.float32), compression="gzip")
+        bbox_set = group.create_dataset("bboxes", data=bboxes[i].astype(np.float32), compression="gzip")
+        bin_set = group.create_dataset("binary", data=bins[i].astype(np.float32), compression="gzip")
+        
+        
+def load_group_h5(path,group_name):
+    '''
+    
+    path: file path for h5 file
+    group_name: train, test, val
+    ['bboxes', 'binary', 'images', 'masks']
+    '''
+    with h5.File(path, 'r') as file:
+        bbox = file[group_name].get('bboxes')[:]
+        bin = file[group_name].get('binary')[:]
+        images = file[group_name].get('images')[:]
+        masks = file[group_name].get('masks')[:]
+
+    return bbox, bin, images, masks
+    
+        
+
