@@ -57,22 +57,28 @@ class PetSegmentationDataSet(Dataset):
         print('Loading Data...')
         t = time.time()
         img = DataUtils.load_data_from_h5(self.folder, 'images.h5')
+        img = torch.from_numpy(img).permute(0,3,1,2)
         data = {'images':img}
+        
         if mask:
-            data['masks'] = DataUtils.load_data_from_h5(self.folder, 'masks.h5')
+            mask = DataUtils.load_data_from_h5(self.folder, 'masks.h5')
+            mask = torch.from_numpy(mask).permute(0,3,1,2)
+            data['masks'] = mask
         if bin:
-            data['bins'] = DataUtils.load_data_from_h5(self.folder, 'binary.h5')
+            bins = torch.from_numpy(DataUtils.load_data_from_h5(self.folder, 'binary.h5'))
+            data['bins'] = bins
         if bbox:
-            data['bbox'] = DataUtils.load_data_from_h5(self.folder, 'bboxes.h5')
+            box = torch.from_numpy(DataUtils.load_data_from_h5(self.folder, 'bboxes.h5'))
+            data['bbox'] = box
         print(f'Finished Loading Data ({time.time() - t:.2f}s)')
         return data
     
     def visualize_data(self):
-        index = np.random.randint(self.data['images'].shape[0]-1)
-        img = self.data['images'][index]/255
+        index = np.random.randint(self.data['images'].size()[0]-1)
+        img = self.data['images'][index].permute(1,2,0).numpy()/255
         fig, ax = plt.subplots()
         if self.mask:
-            msk = self.data['masks'][index]
+            msk = self.data['masks'][index].permute(1,2,0).numpy()
             msk = np.ones(msk.shape)-msk
             img = img - msk
             
@@ -93,7 +99,6 @@ class PetSegmentationDataSet(Dataset):
         
         # remove one of these
         fig.show()
-        plt.savefig('Dataset Visualisation.png')
         #plt.show()
         
 
