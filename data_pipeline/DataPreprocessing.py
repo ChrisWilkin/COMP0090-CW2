@@ -5,6 +5,7 @@ from PIL import Image
 import math
 from numpy.testing._private.utils import print_assert_equal
 from xml.dom import minidom
+from DataUtils import paths
 
 PATH_OG = f'{os.path.dirname(__file__)[:-14]}/Datasets/CompleteDataset'
 
@@ -111,15 +112,15 @@ def coords_from_xml(file, crop):
     extracts bounding box coordinates from xml file and accounts for image cropping
     '''
     f = minidom.parse(file, )
-    xmin = f.getElementsByTagName('xmin')[0].firstChild.data
-    xmax = f.getElementsByTagName('xmax')[0].firstChild.data
-    ymin = f.getElementsByTagName('ymin')[0].firstChild.data
-    ymax = f.getElementsByTagName('ymax')[0].firstChild.data
-    width = f.getElementsByTagName('width')[0].firstChild.data
-    height = f.getElementsByTagName('height')[0].firstChild.data
+    xmin = int(f.getElementsByTagName('xmin')[0].firstChild.data)
+    xmax = int(f.getElementsByTagName('xmax')[0].firstChild.data)
+    ymin = int(f.getElementsByTagName('ymin')[0].firstChild.data)
+    ymax = int(f.getElementsByTagName('ymax')[0].firstChild.data)
+    width = int(f.getElementsByTagName('width')[0].firstChild.data)
+    height = int(f.getElementsByTagName('height')[0].firstChild.data)
     print(height, crop[0])
     h_diff = height - crop[0]
-    w_diff = width = crop[1]
+    w_diff = width - width(crop[1])
 
     if crop is not None:
         ymin = 0 if ymin < h_diff / 2 else ymin - np.floor(h_diff/2)
