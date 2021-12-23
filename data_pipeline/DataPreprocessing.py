@@ -6,6 +6,7 @@ import math
 from numpy.testing._private.utils import print_assert_equal
 from xml.dom import minidom
 from DataUtils import paths
+import pandas as pd
 
 PATH_OG = f'{os.path.dirname(__file__)[:-14]}/Datasets/CompleteDataset'
 
@@ -118,17 +119,17 @@ def coords_from_xml(file, crop):
     ymax = int(f.getElementsByTagName('ymax')[0].firstChild.data)
     width = int(f.getElementsByTagName('width')[0].firstChild.data)
     height = int(f.getElementsByTagName('height')[0].firstChild.data)
-    print(height, crop[0])
-    h_diff = height - crop[0]
-    w_diff = width - width(crop[1])
 
     if crop is not None:
+        print(height, crop[0])
+        h_diff = height - crop[0]
+        w_diff = width - crop[1]
         ymin = 0 if ymin < h_diff / 2 else ymin - np.floor(h_diff/2)
         ymax = crop[0] if ymax - crop[0] > h_diff / 2 else ymax - np.floor(h_diff/2)
         xmin = 0 if xmin < w_diff / 2 else xmin - np.floor(w_diff/2)
         xmax = crop[1] if xmax - crop[1] > w_diff / 2 else xmax - np.floor(w_diff/2)
 
-    return (width, height), (xmin, ymin, xmax, ymax)
+    return (xmin, ymin, xmax, ymax)
 
 def get_files(path, extension=None, ind=None, split=None):
     '''
@@ -153,7 +154,7 @@ def get_files(path, extension=None, ind=None, split=None):
 
 def load_data(folder, test_train_val=None, indices=None, crop_size=None):
     '''
-    data: images / masks / bboxes / bins - specifies the type of data to be loaded
+    folder: images / masks / bboxes / bins - specifies the type of data to be loaded
     test_train_val: if set to 'train' or 'test' or 'val, uses a default 60:20:20 data split. Default None returns all data
     indices: if None, all data returned, otherwise accepts int or array([int]) to return specific indices of data
     crop_size: array([height, width]) to crop images to. If image is smaller, it will be padded with black
@@ -196,16 +197,15 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
             data.append(coords_from_xml(paths(path, name), crop_size))
 
     elif folder == 'bins':
-        path = paths(PATH_OG, 'annotations')
-
+        path = paths(PATH_OG, 'annotations', 'list.txt')
+        file = pd.read_csv(path, sep=' ', skiprows=6, names=['Image', 'ID', 'Species', 'Breed'])
+        df = pd.DataFrame(file)
+        if indices is not None:
+            for i in indices:
+                data.append([df.iloc[i]['Species'] - 1, df.iloc[i]['Breed']])
+        
     return data
 
 
-
-ind = np.array([1])
-assert isinstance(ind, np.ndarray)
-x = load_data('bboxes', indices=ind, crop_size=np.array([600, 400]))
-print(x[0].shape)
-print(x[0])
 
 
