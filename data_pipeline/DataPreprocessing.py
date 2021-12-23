@@ -5,7 +5,7 @@ from PIL import Image
 import math
 from numpy.testing._private.utils import print_assert_equal
 from xml.dom import minidom
-from DataUtils import paths
+from DataUtils import paths, save_h5
 import pandas as pd
 
 PATH_OG = f'{os.path.dirname(__file__)[:-14]}/Datasets/CompleteDataset'

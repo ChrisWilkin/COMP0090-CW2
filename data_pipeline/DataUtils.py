@@ -34,7 +34,7 @@ def load_data_from_h5(folder, file):
 
 
 ### save individual arrays into h5 file as group
-def save_h5(images, masks, bboxes, bins,path, group_names):
+def save_h5(images, masks, bboxes, bins, path, group_names):
     '''
     images: list of image arrays [train_images, test_images, val_images]
     masks: list of mask arrays [train_masks, test_masks, val_masks]
@@ -51,7 +51,7 @@ def save_h5(images, masks, bboxes, bins,path, group_names):
         bbox_set = group.create_dataset("bboxes", data=bboxes[i].astype(np.float32), compression="gzip")
         bin_set = group.create_dataset("binary", data=bins[i].astype(np.float32), compression="gzip")
     
-    return
+    return image_set, mask_set, bbox_set, bin_set
         
         
 def load_group_h5(path,group_name):
