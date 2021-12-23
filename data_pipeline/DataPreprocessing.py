@@ -134,7 +134,7 @@ def coords_from_xml(file, crop):
 
     return (xmin, ymin, xmax, ymax)
 
-def get_files(path, extension=None, ind=None, split=None):
+def get_files(path, extension=None, ind=None):
     '''
     Give a path to a folder, a file extension to check for, and an optional list of indices, 
     this returns the name of all files in the folder.
@@ -145,10 +145,6 @@ def get_files(path, extension=None, ind=None, split=None):
     if extension is not None:
         exts = [file_names[i][-3:] == extension for i in range(len(file_names))] #ignore any non .jpg files
         file_names = file_names[exts]
-    if split is not None:   #Generates a 60/20/20 train test val split in the data
-        assert split in ttv.keys(), 'Invalid split argument. Must be test, train or val'
-        ind = np.arange(0, len(file_names), 1)
-        ind = np.random.choice(ind, int(ttv[split] * len(file_names)))
     if ind is not None:
         assert len(ind) <= len(file_names)
         file_names = [file_names[i] for i in ind]   # if indices listed, apply this
@@ -166,8 +162,23 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
     
     if test_train_val is not None:
         assert indices is None, 'test_train_val and indices cannot both be specified'
-        assert test_train_val in ['test', 'train', 'val'], 'Invalid argument. Must be in test / train / val'
+        indices = []
 
+        assert test_train_val in ['test', 'train', 'val'], 'Invalid argument. Must be in test / train / val'
+        path = paths(PATH_OG, 'annotations', 'list.txt')
+        file = pd.read_csv(path, sep=' ', skiprows=6, names=['Image', 'ID', 'Species', 'Breed'])
+        df = pd.DataFrame(file)
+        ids = df['ID']
+        ind_grps = np.array([np.where(ids == i) for i in range(1, 37)])
+        for group in ind_grps:
+            l = int(np.floor(len(group[0]) / 5))
+            if test_train_val == 'train':
+                indices.append(group[0][:3*l])
+            elif test_train_val == 'test':
+                indices.append(group[0][3*l:4*l])
+            elif test_train_val == 'val':
+                indices.append(group[0][4*l:])
+        indices = np.concatenate(indices)
 
     elif indices is not None:
         assert isinstance(indices, np.ndarray), 'Invalid indices entry. Must by numpy array of integers'
@@ -208,7 +219,4 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
                 data.append([df.iloc[i]['Species'] - 1, df.iloc[i]['Breed']])
         
     return data
-
-
-
 
