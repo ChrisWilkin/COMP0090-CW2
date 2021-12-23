@@ -8,6 +8,8 @@ from xml.dom import minidom
 from DataUtils import paths, save_h5
 import pandas as pd
 
+from data_pipeline.DataUtils import PATH
+
 PATH_OG = f'{os.path.dirname(__file__)[:-14]}/Datasets/CompleteDataset'
 
 def add_margin(img, top, right, bottom, left, color):
@@ -158,6 +160,7 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
     indices: if None, all data returned, otherwise accepts int or array([int]) to return specific indices of data
     crop_size: array([height, width]) to crop images to. If image is smaller, it will be padded with black
     '''
+    print(f'Beginning {folder} loading')
     assert folder in ['images', 'masks', 'bboxes', 'bins'], 'Invalid data category. Must be in images / masks / bboxes / bins'
     
     if test_train_val is not None:
@@ -217,6 +220,21 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
         if indices is not None:
             for i in indices:
                 data.append([df.iloc[i]['Species'] - 1, df.iloc[i]['Breed']])
-        
+    print('{folder} loaded successfully')   
+    print('')
     return data
 
+
+#############################################################################################
+######################## Apply Preprocessing and Create h5 File #############################
+#############################################################################################
+
+
+images = [load_data('images', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
+masks = [load_data('masks', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
+bboxes = [load_data('bboxes', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
+bins = [load_data('bins', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
+path = paths(PATH_OG, 'CustomDataset.h5')
+group_names = ['train', 'test', 'validation']
+
+save_h5(images, masks, bboxes, bins, path, group_names)
