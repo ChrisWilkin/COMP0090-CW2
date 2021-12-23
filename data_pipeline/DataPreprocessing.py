@@ -8,8 +8,6 @@ from xml.dom import minidom
 from DataUtils import paths, save_h5
 import pandas as pd
 
-from data_pipeline.DataUtils import PATH
-
 PATH_OG = f'{os.path.dirname(__file__)[:-14]}/Datasets/CompleteDataset'
 
 def add_margin(img, top, right, bottom, left, color):
