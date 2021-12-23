@@ -52,7 +52,6 @@ def crop_image(img, height, width):
     crops input image(PIL Image) to size height x width.
     If image is smaller than these dimensions, it is padded with black (zeros)
     '''
-    print(img.size)
     if img.size[0] < width or img.size[1] < height:
         w_diff = width - img.size[0]
         h_diff = height - img.size[1]
@@ -63,19 +62,14 @@ def crop_image(img, height, width):
         top = math.ceil(h_diff / 2) 
         bottom = math.floor(h_diff / 2)
         img = add_margin(img, top, right, bottom, left, (0,0,0))
-        print(img.size)
     
     w_diff = img.size[0] - width
     h_diff = img.size[1] - height  
-    print(w_diff, h_diff) 
     right = img.size[0] - math.ceil(w_diff / 2) 
     left = math.floor(w_diff / 2)
     top = math.ceil(h_diff / 2) 
     bottom = img.size[1] - math.floor(h_diff / 2)
-    print(top, bottom, left, right)
     img = img.crop((left, top, right, bottom))
-    print(img.size)
-    img.show()
 
     return img
 
@@ -95,27 +89,67 @@ def array_from_jpg(file_name, crop=None):
     file.close()
     return pix
 
+def crop_mask(img, height, width):
+    '''
+    crops input image(PIL Image) to size height x width.
+    If image is smaller than these dimensions, it is padded with black (zeros)
+    '''
+    print(img.shape, width, height)
+    if img.shape[0] < width or img.shape[1] < height:
+        print('Image too small')
+        w_diff = width - img.shape[0]
+        h_diff = height - img.shape[1]
+        w_diff = (np.abs(w_diff) + w_diff) / 2 # zero if wdiff -ve , unchanged if wdiff +ve
+        h_diff = (np.abs(h_diff) + h_diff) / 2    
+        right = math.ceil(w_diff / 2) 
+        left = math.floor(w_diff / 2)
+        top = math.ceil(h_diff / 2) 
+        bottom = math.floor(h_diff / 2)
+        print(top, bottom, left, right)
+        img = np.pad(img, ((left, right), (top, bottom)), constant_values = 2)
+        print(img.shape)
+        
+    w_diff = img.shape[0] - width
+    h_diff = img.shape[1] - height  
+    right = img.shape[0] - math.ceil(w_diff / 2) 
+    left = math.floor(w_diff / 2)
+    top = math.ceil(h_diff / 2) 
+    bottom = img.shape[1] - math.floor(h_diff / 2)
+    img = img[left:right, top:bottom]
+    return img
+
+
 def array_from_png(file_name, crop=None):
     file = Image.open(file_name)
-    if crop is not None:
-        file = crop_image(file, crop[0], crop[1])
     try:
-        pix = np.asarray(file)
+        pix = np.array(file.getdata()).reshape(file.size[0], file.size[1])
     except:
-        print(f'Failed to convert {file_name} to array!')
+        print(f'array_from_png failed to convert {file_name} to array!')
+
+    if crop is not None:
+        pix = crop_mask(pix, crop[0], crop[1])
+
     return pix
 
-def get_files(path, extension=None, ind=None):
+def get_files(path, extension=None, ind=None, split=None):
     '''
     Give a path to a folder, a file extension to check for, and an optional list of indices, 
     this returns the name of all files in the folder.
     '''
+    ttv = {'train': 0.6, 'test': 0.2, 'val': 0.2}
+
     file_names = np.array(next(os.walk(path), (None, None, []))[2])  # list of file names in folder
     if extension is not None:
         exts = [file_names[i][-3:] == extension for i in range(len(file_names))] #ignore any non .jpg files
         file_names = file_names[exts]
+    if split is not None:   #Generates a 60/20/20 train test val split in the data
+        assert split in ttv.keys(), 'Invalid split argument. Must be test, train or val'
+        ind = np.arange(0, len(file_names), 1)
+        ind = np.random.choice(ind, int(ttv[split] * len(file_names)))
     if ind is not None:
+        assert len(ind) <= len(file_names)
         file_names = [file_names[i] for i in ind]   # if indices listed, apply this
+
     return file_names
 
 def load_data(folder, test_train_val=None, indices=None, crop_size=None):
@@ -130,6 +164,7 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
     if test_train_val is not None:
         assert indices is None, 'test_train_val and indices cannot both be specified'
         assert test_train_val in ['test', 'train', 'val'], 'Invalid argument. Must be in test / train / val'
+
 
     elif indices is not None:
         assert isinstance(indices, np.ndarray), 'Invalid indices entry. Must by numpy array of integers'
@@ -153,7 +188,7 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
         path = paths(PATH_OG, 'annotations', 'trimaps')
         file_names = get_files(path, 'png', indices)
         for i, name in enumerate(file_names):
-            data.append(array_from_png(paths(path, name)))
+            data.append(array_from_png(paths(path, name), crop_size))
 
     elif folder == 'bboxes':
         path = paths(PATH_OG, 'annotations', 'xmls')
@@ -163,9 +198,8 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
     return data
 
 
-#TEST CODE
 ind = np.array([1])
 assert isinstance(ind, np.ndarray)
-x = load_data('masks', indices=ind)
-print(x)
-
+x = load_data('masks', indices=ind, crop_size=np.array([600, 400]))
+print(x[0].shape)
+print(x[0])
