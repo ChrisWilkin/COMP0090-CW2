@@ -69,9 +69,7 @@ def crop_mask(img, height, width):
     crops input image(PIL Image) to size height x width.
     If image is smaller than these dimensions, it is padded with black (zeros)
     '''
-    print(img.shape, width, height)
     if img.shape[0] < width or img.shape[1] < height:
-        print('Image too small')
         w_diff = width - img.shape[0]
         h_diff = height - img.shape[1]
         w_diff = (np.abs(w_diff) + w_diff) / 2 # zero if wdiff -ve , unchanged if wdiff +ve
@@ -80,9 +78,8 @@ def crop_mask(img, height, width):
         left = math.floor(w_diff / 2)
         top = math.ceil(h_diff / 2) 
         bottom = math.floor(h_diff / 2)
-        print(top, bottom, left, right)
         img = np.pad(img, ((left, right), (top, bottom)), constant_values = 2)
-        print(img.shape)
+
         
     w_diff = img.shape[0] - width
     h_diff = img.shape[1] - height  
@@ -124,7 +121,7 @@ def coords_from_xml(file, crop):
     height = int(f.getElementsByTagName('height')[0].firstChild.data)
 
     if crop is not None:
-        print(height, crop[0])
+        #print(height, crop[0])
         h_diff = height - crop[0]
         w_diff = width - crop[1]
         ymin = 0 if ymin < h_diff / 2 else ymin - np.floor(h_diff/2)
@@ -146,7 +143,7 @@ def get_files(path, extension=None, ind=None):
         exts = [file_names[i][-3:] == extension for i in range(len(file_names))] #ignore any non .jpg files
         file_names = file_names[exts]
     if ind is not None:
-        assert len(ind) <= len(file_names)
+        assert len(ind) <= len(file_names), f'Files: {len(file_names)}, Ind: {len(ind)}'
         file_names = [file_names[i] for i in ind]   # if indices listed, apply this
 
     return file_names
@@ -236,11 +233,11 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
 #############################################################################################
 
 
-images = [load_data('images', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
-masks = [load_data('masks', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
+#images = [load_data('images', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
+#masks = [load_data('masks', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
 bboxes = [load_data('bboxes', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
 bins = [load_data('bins', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
 path = paths(PATH_OG, 'CustomDataset.h5')
 group_names = ['train', 'test', 'validation']
 
-save_h5(images, masks, bboxes, bins, path, group_names)
+#save_h5(images, masks, bboxes, bins, path, group_names)
