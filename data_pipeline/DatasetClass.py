@@ -16,6 +16,10 @@ import torch
 from torch.utils.data import Dataset, DataLoader, dataloader
 import DataUtils
 import time
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from PIL import Image
 
 class PetSegmentationDataSet(Dataset):
     def __init__(self, folder, *args):
@@ -62,10 +66,40 @@ class PetSegmentationDataSet(Dataset):
             data['bbox'] = DataUtils.load_data_from_h5(self.folder, 'bboxes.h5')
         print(f'Finished Loading Data ({time.time() - t:.2f}s)')
         return data
+    
+    def visualize_data(self):
+        index = np.random.randint(self.data['images'].shape[0]-1)
+        img = self.data['images'][index]/255
+        fig, ax = plt.subplots()
+        if self.mask:
+            msk = self.data['masks'][index]
+            msk = np.ones(msk.shape)-msk
+            img = img - msk
+            
+        ax.imshow(img)
+        
+        if self.bbox:
+            box = np.round(self.data['bbox'][index])
+            x = box[0]
+            y = box[1]
+            width = box[2] - box[0]
+            height = box[3] - box[1]
+            rect = patches.Rectangle((x, y), width, height, linewidth=1, edgecolor='r', facecolor='none')
+            ax.add_patch(rect)
+
+        if self.bin:
+            label = "dog" if self.data['bins'][index] == 0 else "cat"
+            fig.text(0.25, 0.80,label,fontsize = 10,bbox ={'facecolor':'white','alpha':0.6,'pad':10})
+        
+        # remove one of these
+        fig.show()
+        #plt.show()
+        
 
 
 dataset = PetSegmentationDataSet('test', 'mask')
 dataloader = DataLoader(dataset, batch_size=1, shuffle=True, num_workers=0)
 print(dataset.__len__())
+dataset.visualize_data()
 
 
