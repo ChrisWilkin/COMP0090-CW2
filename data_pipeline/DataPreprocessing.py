@@ -5,7 +5,7 @@ from PIL import Image
 import math
 from numpy.testing._private.utils import print_assert_equal
 from xml.dom import minidom
-from DataUtils import paths, save_h5
+from DataUtils import paths, save_h52
 import pandas as pd
 
 PATH_OG = f'{os.path.dirname(__file__)[:-14]}/Datasets/CompleteDataset'
@@ -223,13 +223,15 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None, return_
         assert len(crop_size) == 2
 
     data = []
+    ids = []
 
     if folder == 'images':
         path = paths(PATH_OG, 'images') #path to images folder
         file_names = get_files(path, 'jpg', indices, id_names)
 
         for i, name in enumerate(file_names):
-            data.append([array_from_jpg(paths(path, name), crop_size), name_id[name[:-4]]])  # load numpy array in for every filename
+            data.append([array_from_jpg(paths(path, name), crop_size)])  # load numpy array in for every filename
+            ids.append(name_id[name[:-4]])
             if (i+1) % 250 == 0:
                 print(f'Loaded {i+1} / {len(file_names)}')
             # array is in WxHxC format
@@ -238,7 +240,8 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None, return_
         path = paths(PATH_OG, 'annotations', 'trimaps')
         file_names = get_files(path, 'png', indices, id_names)
         for i, name in enumerate(file_names):
-            data.append([array_from_png(paths(path, name), crop_size), name_id[name[:-4]]])
+            data.append([array_from_png(paths(path, name), crop_size)])
+            ids.append(name_id[name[:-4]])
             if (i+1) % 250 == 0:
                 print(f'Loaded {i+1} / {len(file_names)}')
             # array is in WxHxC format
@@ -247,7 +250,8 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None, return_
         path = paths(PATH_OG, 'annotations', 'xmls')
         file_names = get_files_bbox(path, 'xml', indices, id_names)
         for i, name in enumerate(file_names):
-            data.append([coords_from_xml(paths(path, name), crop_size), name_id[name[:-4]]])
+            data.append([coords_from_xml(paths(path, name), crop_size)])
+            ids.append(name_id[name[:-4]])
             if (i+1) % 250 == 0:
                 print(f'Loaded {i+1} / {len(file_names)}')
             # array is in WxHxC format
@@ -258,33 +262,36 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None, return_
         df = pd.DataFrame(file)
         if indices is not None:
             for i in indices:
-                data.append([df.iloc[i]['Species'] - 1, df.iloc[i]['Breed'], name_id[df.iloc[i]['Image']]])
+                data.append([df.iloc[i]['Species'] - 1, df.iloc[i]['Breed']])
+                ids.append(name_id[df.iloc[i]['Image']])
         else:
             for i in range(len(df['ID'])):
                 data.append([df.iloc[i]['Species'] - 1, df.iloc[i]['Breed'], name_id[df.iloc[i]['Image']]])
+                ids.append(name_id[df.iloc[i]['Image']])
     print(f'{folder} loaded successfully')   
     print('')
     if data == []:
         data = [[0]]
 
     if return_dicts:
-        return np.array(data), name_id, id_names
+        return np.array(data), np.array(ids), name_id, id_names
     else:
-        return np.array(data)
+        return np.array(data), np.array(ids)
 
 
+a = load_data('images', test_train_val='test', crop_size=np.array([256, 256]))
 
 
 #############################################################################################
 ######################## Apply Preprocessing and Create h5 File #############################
 #############################################################################################
+'''
 
+images = [load_data('images', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
+masks = [load_data('masks', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
+bboxes = [load_data('bboxes', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
+bins = [load_data('bins', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
+path = paths(PATH_OG, 'CustomDataset.h5')
 
-#images = np.array([load_data('images', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']])
-#masks = np.array([load_data('masks', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']])
-bboxes = np.concatenate(np.array([load_data('bboxes', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]))
-print(bboxes)
-#bins = np.array([load_data('bins', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']])
-#path = paths(PATH_OG, 'CustomDataset.h5')
-#group_names = ['train', 'test', 'validation']
-#save_h5(images, masks, bboxes, bins, path, group_names)
+save_h52(images, masks, bboxes, bins, path)
+'''

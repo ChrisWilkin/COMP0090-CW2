@@ -3,8 +3,11 @@ import os
 import numpy as np
 from PIL import Image
 import math
+from numpy.lib.npyio import save
 from numpy.testing._private.utils import print_assert_equal
 from xml.dom import minidom
+
+from pandas.core.accessor import PandasDelegate
 
 PATH = f'{os.path.dirname(__file__)[:-14]}/Datasets'
 HEIGHT = 256
@@ -48,10 +51,31 @@ def save_h5(images, masks, bboxes, bins, path, group_names):
         group = f.create_group(group_names[i])
         for j, k in enumerate(['images', 'masks', 'bboxes', 'binary']):
             subgroup = group.create_group(k)
-            subgroup.create_dataset(k, data=images[i, 0].astype(np.float32), compression="gzip")
-            subgroup.create_dataset("ID", data=masks[i, 1].astype(np.float32), compression="gzip")
+            print(images[i][:][0])
+            subgroup.create_dataset(k, data=images[i][:][0], compression="gzip")
+            subgroup.create_dataset("ID", data=masks[i][1].astype(np.int), compression="gzip")
     return
         
+
+def save_h52(ims, msks, bbs, bins, path):
+    f = h5.File(path, 'w')
+    for i, grp in enumerate(['Training', 'Testing', 'Validation']):
+        group = f.create_group(grp)
+        Images = group.create_group('Images')
+        Masks = group.create_group('Masks')
+        BBoxes = group.create_group('BBoxes')
+        Bins = group.create_group('Bins')
+
+        Images.create_dataset('ims', data=ims[i][0], compression='gzip')
+        Images.create_dataset('ID', data=ims[i][1], compression='gzip')
+        Masks.create_dataset('masks', data=msks[i][0], compression='gzip')
+        Masks.create_dataset('ID', data=msks[i][1], compression='gzip')
+        BBoxes.create_dataset('bboxes', data=bbs[i][0], compression='gzip')
+        BBoxes.create_dataset('ID', data=bbs[i][1], compression='gzip')
+        Bins.create_dataset('bins', data=bins[i][0], compression='gzip')
+        Bins.create_dataset('ID', data=bins[i][1], compression='gzip')
+    return
+
         
 def load_group_h5(path,group_name):
     '''
@@ -68,5 +92,6 @@ def load_group_h5(path,group_name):
 
     return bbox, bin, images, masks
     
-        
+
+
 
