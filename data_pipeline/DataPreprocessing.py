@@ -158,14 +158,17 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
     print(f'Beginning {folder} loading')
     assert folder in ['images', 'masks', 'bboxes', 'bins'], 'Invalid data category. Must be in images / masks / bboxes / bins'
     
+    path = paths(PATH_OG, 'annotations', 'list.txt')
+    file = pd.read_csv(path, sep=' ', skiprows=6, names=['Image', 'ID', 'Species', 'Breed'])
+    df = pd.DataFrame(file)
+    names, id, breed = df['Image'], np.arange(0, len(df['Image']), 1), df['Breed']
+
+
     if test_train_val is not None:
         assert indices is None, 'test_train_val and indices cannot both be specified'
         indices = []
 
         assert test_train_val in ['test', 'train', 'val'], 'Invalid argument. Must be in test / train / val'
-        path = paths(PATH_OG, 'annotations', 'list.txt')
-        file = pd.read_csv(path, sep=' ', skiprows=6, names=['Image', 'ID', 'Species', 'Breed'])
-        df = pd.DataFrame(file)
         ids = df['ID']
         ind_grps = np.array([np.where(ids == i) for i in range(1, 37)])
         for group in ind_grps:
@@ -227,17 +230,21 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
     print('')
     return data
 
+a = load_data('bins')
 
+
+'''
 #############################################################################################
 ######################## Apply Preprocessing and Create h5 File #############################
 #############################################################################################
 
 
-#images = [load_data('images', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
-#masks = [load_data('masks', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
+images = [load_data('images', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
+masks = [load_data('masks', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
 bboxes = [load_data('bboxes', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
 bins = [load_data('bins', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
 path = paths(PATH_OG, 'CustomDataset.h5')
 group_names = ['train', 'test', 'validation']
 
-#save_h5(images, masks, bboxes, bins, path, group_names)
+save_h5(images, masks, bboxes, bins, path, group_names)
+'''
