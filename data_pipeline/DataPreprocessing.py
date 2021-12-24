@@ -230,7 +230,7 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None, return_
 
         for i, name in enumerate(file_names):
             data.append([array_from_jpg(paths(path, name), crop_size), name_id[name[:-4]]])  # load numpy array in for every filename
-            if (i+1) % 50 == 0:
+            if (i+1) % 250 == 0:
                 print(f'Loaded {i+1} / {len(file_names)}')
             # array is in WxHxC format
 
@@ -239,7 +239,7 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None, return_
         file_names = get_files(path, 'png', indices, id_names)
         for i, name in enumerate(file_names):
             data.append([array_from_png(paths(path, name), crop_size), name_id[name[:-4]]])
-            if (i+1) % 50 == 0:
+            if (i+1) % 250 == 0:
                 print(f'Loaded {i+1} / {len(file_names)}')
             # array is in WxHxC format
 
@@ -248,7 +248,7 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None, return_
         file_names = get_files_bbox(path, 'xml', indices, id_names)
         for i, name in enumerate(file_names):
             data.append([coords_from_xml(paths(path, name), crop_size), name_id[name[:-4]]])
-            if (i+1) % 50 == 0:
+            if (i+1) % 250 == 0:
                 print(f'Loaded {i+1} / {len(file_names)}')
             # array is in WxHxC format
 
