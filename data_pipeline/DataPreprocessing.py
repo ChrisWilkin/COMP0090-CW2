@@ -60,7 +60,7 @@ def array_from_jpg(file_name, crop=None):
         pix = np.array(file.getdata()).reshape(file.size[0], file.size[1], 3)
     except:
         print(f'Failed to convert {file_name} to array!')
-        pix = []
+        pix = np.zeros((256, 256, 3))
     file.close()
     return pix
 
@@ -99,12 +99,14 @@ def array_from_png(file_name, crop=None):
     try:
         pix = np.array(file.getdata()).reshape(file.size[0], file.size[1])
     except:
+        pix = np.zeros((256, 256, 1))
         print(f'array_from_png failed to convert {file_name} to array!')
 
     if crop is not None:
         pix = crop_mask(pix, crop[0], crop[1])
     
     pix = pix[:, :, None]
+    file.close()
 
     return pix
 
@@ -279,13 +281,13 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None, return_
         return np.array(data), np.array(ids)
 
 
-a = load_data('images', test_train_val='test', crop_size=np.array([256, 256]))
+#a = load_data('images', test_train_val='train', crop_size=np.array([256, 256]))
 
 
 #############################################################################################
 ######################## Apply Preprocessing and Create h5 File #############################
 #############################################################################################
-'''
+
 
 images = [load_data('images', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
 masks = [load_data('masks', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
@@ -294,4 +296,3 @@ bins = [load_data('bins', test_train_val=grp, crop_size=np.array([256, 256])) fo
 path = paths(PATH_OG, 'CustomDataset.h5')
 
 save_h52(images, masks, bboxes, bins, path)
-'''
