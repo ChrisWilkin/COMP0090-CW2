@@ -264,6 +264,9 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None, return_
                 data.append([df.iloc[i]['Species'] - 1, df.iloc[i]['Breed'], name_id[df.iloc[i]['Image']]])
     print(f'{folder} loaded successfully')   
     print('')
+    if data == []:
+        data = [[0]]
+
     if return_dicts:
         return np.array(data), name_id, id_names
     else:
@@ -277,11 +280,11 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None, return_
 #############################################################################################
 
 
-images = [load_data('images', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
-masks = [load_data('masks', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
-bboxes = [load_data('bboxes', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
-bins = [load_data('bins', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
-path = paths(PATH_OG, 'CustomDataset.h5')
-group_names = ['train', 'test', 'validation']
-
-save_h5(images, masks, bboxes, bins, path, group_names)
+#images = np.array([load_data('images', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']])
+#masks = np.array([load_data('masks', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']])
+bboxes = np.concatenate(np.array([load_data('bboxes', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]))
+print(bboxes)
+#bins = np.array([load_data('bins', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']])
+#path = paths(PATH_OG, 'CustomDataset.h5')
+#group_names = ['train', 'test', 'validation']
+#save_h5(images, masks, bboxes, bins, path, group_names)
