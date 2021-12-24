@@ -148,6 +148,28 @@ def get_files(path, extension=None, ind=None):
 
     return file_names
 
+def get_files_bbox(path, extension=None, ind=None, dict=None):
+    '''
+    Give a path to a folder, a file extension to check for, and an optional list of indices, 
+    this returns the name of all files in the folder.
+    '''
+    ttv = {'train': 0.6, 'test': 0.2, 'val': 0.2}
+
+    file_names = np.array(next(os.walk(path), (None, None, []))[2])  # list of file names in folder
+    if extension is not None:
+        exts = [file_names[i][-3:] == extension for i in range(len(file_names))] #ignore any non .jpg files
+        file_names = file_names[exts]
+    if ind is not None:
+        fls = []
+        for i in ind:
+            name = f'{dict[i]}.xml'
+            if name in file_names:
+                fls.append(name)
+        file_names = np.array(fls)
+
+
+    return file_names
+
 def load_data(folder, test_train_val=None, indices=None, crop_size=None):
     '''
     folder: images / masks / bboxes / bins - specifies the type of data to be loaded
@@ -161,25 +183,22 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
     path = paths(PATH_OG, 'annotations', 'list.txt')
     file = pd.read_csv(path, sep=' ', skiprows=6, names=['Image', 'ID', 'Species', 'Breed'])
     df = pd.DataFrame(file)
-    names, id, breed = df['Image'], np.arange(0, len(df['Image']), 1), df['Breed']
-
+    names, id = df['Image'], np.arange(0, len(df['Image']), 1)
+    name_id = {}
+    id_names = {}
+    for i in range(len(names)):
+        name_id[names[i]] = id[i]
+        id_names[id[i]] = names[i]
 
     if test_train_val is not None:
         assert indices is None, 'test_train_val and indices cannot both be specified'
-        indices = []
-
         assert test_train_val in ['test', 'train', 'val'], 'Invalid argument. Must be in test / train / val'
-        ids = df['ID']
-        ind_grps = np.array([np.where(ids == i) for i in range(1, 37)])
-        for group in ind_grps:
-            l = int(np.floor(len(group[0]) / 5))
-            if test_train_val == 'train':
-                indices.append(group[0][:3*l])
-            elif test_train_val == 'test':
-                indices.append(group[0][3*l:4*l])
-            elif test_train_val == 'val':
-                indices.append(group[0][4*l:])
-        indices = np.concatenate(indices)
+        if test_train_val == 'test':
+            path = paths(PATH_OG, 'annotations', 'test.txt')
+            test_file = pd.read_csv(path, sep=' ', skiprows=6, names=['Image', 'ID', 'Species', 'Breed']) 
+            test_df = pd.DataFrame(test_file)
+            for i in range(len(test_file['Image'])):
+                
 
     elif indices is not None:
         assert isinstance(indices, np.ndarray), 'Invalid indices entry. Must by numpy array of integers'
@@ -196,7 +215,7 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
         file_names = get_files(path, 'jpg', indices)
 
         for i, name in enumerate(file_names):
-            data.append(array_from_jpg(paths(path, name), crop_size))  # load numpy array in for every filename
+            data.append([array_from_jpg(paths(path, name), crop_size), name_id[name[:-4]]])  # load numpy array in for every filename
             if (i+1) % 50 == 0:
                 print(f'Loaded {i+1} / {len(file_names)}')
             # array is in WxHxC format
@@ -205,16 +224,17 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
         path = paths(PATH_OG, 'annotations', 'trimaps')
         file_names = get_files(path, 'png', indices)
         for i, name in enumerate(file_names):
-            data.append(array_from_png(paths(path, name), crop_size))
+            data.append([array_from_png(paths(path, name), crop_size), name_id[name[:-4]]])
             if (i+1) % 50 == 0:
                 print(f'Loaded {i+1} / {len(file_names)}')
             # array is in WxHxC format
 
     elif folder == 'bboxes':
         path = paths(PATH_OG, 'annotations', 'xmls')
-        file_names = get_files(path, 'xml', indices)
+        print(indices[:10])
+        file_names = get_files_bbox(path, 'xml', indices, id_names)
         for i, name in enumerate(file_names):
-            data.append(coords_from_xml(paths(path, name), crop_size))
+            data.append([coords_from_xml(paths(path, name), crop_size), name_id[name[:-4]]])
             if (i+1) % 50 == 0:
                 print(f'Loaded {i+1} / {len(file_names)}')
             # array is in WxHxC format
@@ -225,14 +245,16 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None):
         df = pd.DataFrame(file)
         if indices is not None:
             for i in indices:
-                data.append([df.iloc[i]['Species'] - 1, df.iloc[i]['Breed']])
+                data.append([df.iloc[i]['Species'] - 1, df.iloc[i]['Breed'], name_id[df.iloc[i]['Image']]])
+        else:
+            for i in range(len(df['ID'])):
+                data.append([df.iloc[i]['Species'] - 1, df.iloc[i]['Breed'], name_id[df.iloc[i]['Image']]])
     print('{folder} loaded successfully')   
     print('')
-    return data
+    return data, name_id, id_names
 
-a = load_data('bins')
-
-
+a, b, c = load_data('bboxes', test_train_val='test')
+print(a[:5])
 '''
 #############################################################################################
 ######################## Apply Preprocessing and Create h5 File #############################
