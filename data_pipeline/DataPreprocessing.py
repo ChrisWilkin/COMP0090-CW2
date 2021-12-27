@@ -5,7 +5,7 @@ from PIL import Image
 import math
 from numpy.testing._private.utils import print_assert_equal
 from xml.dom import minidom
-from DataUtils import paths, save_h52
+from DataUtils import paths, save_h5
 import pandas as pd
 
 PATH_OG = f'{os.path.dirname(__file__)[:-14]}/Datasets/CompleteDataset'
@@ -295,4 +295,4 @@ bboxes = [load_data('bboxes', test_train_val=grp, crop_size=np.array([256, 256])
 bins = [load_data('bins', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
 path = paths(PATH_OG, 'CustomDataset.h5')
 
-save_h52(images, masks, bboxes, bins, path)
+save_h5(images, masks, bboxes, bins, path)
