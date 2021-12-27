@@ -108,8 +108,18 @@ def load_custom_dataset(key, dataset, indices=None):
             ids = subgrp.get('ID')[:]
     return labels, ids
 
-#with h5.File(paths(PATH, 'CompleteDataset', 'AllData.h5')) as f:
-#    data = f['val']['masks']
-#    d = data.get('masks')
-#    im = Image.fromarray(d[0] * 100)
-#    im.show()
+def summarise_h5_structure(path):
+    f = h5.File(path, 'r')
+
+    def loop(group):
+        for key in group.keys():
+            if isinstance(group[key], h5.Dataset):
+                print(group[key].name)
+                print(group[key].shape)
+            else:
+                loop(group[key])
+
+    loop(f)
+    return
+
+summarise_h5_structure(paths(PATH, 'CompleteDataset', 'AllData.h5'))
