@@ -80,6 +80,23 @@ def load_group_h5(path,group_name):
 
     return bbox, bin, images, masks
     
+def load_custom_dataset(key, dataset, indices=None):
+    datasets = {'Images': 'ims', 'Masks': 'masks', 'BBoxes': 'bboxes', 'Bins': 'bins'}
+    assert key in ['Testing', 'Training', 'Validation']
+    assert dataset in ['Images', 'Masks', 'BBoxes', 'Bins']
+    path = paths(PATH, 'CompleteDataset', 'CustomDataset.h5')
+    with h5.File(path, 'r') as file:
+        grp = file[key]
+        subgrp = grp[dataset]
+        if indices is not None:
+            labels = subgrp.get(datasets[dataset])[indices].astype(np.uint8)
+            ids = subgrp.get('ID')[:]
+    return labels, ids
 
 
 
+labels, ids = load_custom_dataset('Training', 'Images', 2001)
+labels = np.array(labels)
+ids = np.array(ids)
+im = Image.fromarray(labels[0])
+im.show()
