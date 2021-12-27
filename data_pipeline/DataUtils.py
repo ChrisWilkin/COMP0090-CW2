@@ -33,6 +33,9 @@ def load_data_from_h5(folder, file):
         elems = file.get(key)[:]
 
     return elems
+def create_h5(path, name):
+    h5.File(paths(path, name), 'w')
+    return
 
 def add_data_to_h5(file, name, data=None, *directory):
     '''
@@ -108,3 +111,4 @@ def load_custom_dataset(key, dataset, indices=None):
             ids = subgrp.get('ID')[:]
     return labels, ids
 
+create_h5(PATH, 'test.h5')
