@@ -1,12 +1,11 @@
 import h5py as h5
 import os
 import numpy as np
-from PIL import Image
 from numpy.lib.npyio import save
 from numpy.testing._private.utils import print_assert_equal
-from xml.dom import minidom
 
-from pandas.core.accessor import PandasDelegate
+
+
 
 PATH = f'{os.path.dirname(__file__)[:-14]}/Datasets'
 HEIGHT = 256
@@ -33,25 +32,22 @@ def load_data_from_h5(folder, file):
         elems = file.get(key)[:]
 
     return elems
+
 def create_h5(path, name):
     h5.File(paths(path, name), 'w')
     return
 
-def add_data_to_h5(file, name, data=None, *directory):
+def add_data_to_h5(file, name, folder, subfolder, data):
     '''
     file - h5 file to be added to: Will be created if doesnt exist
     name - name of dataset to be added
     *directory - sequence of strings indicating a group subsystem
     '''
     with  h5.File(file, 'w') as f:
-        if len(directory) != 0:
-            sub = f
-            for folder in directory:
-                assert folder in sub.keys(), 'Ivalid directory path'
-                sub = sub[folder]
-            if data is not None:
-                sub.create_dataset(name, data=data)
-    
+        group = f[folder]
+        subgroup = group[subfolder]
+        subgroup.create_dataset(name, data=data)
+        print(f.keys())
     return
 
 
@@ -111,4 +107,8 @@ def load_custom_dataset(key, dataset, indices=None):
             ids = subgrp.get('ID')[:]
     return labels, ids
 
-create_h5(PATH, 'test.h5')
+with h5.File(paths(PATH, 'CompleteDataset', 'AllData.h5')) as f:
+    for key in f.keys():
+        print(key)
+        for k in f[key].keys():
+            print(k)

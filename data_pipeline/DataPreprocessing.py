@@ -7,10 +7,9 @@ from numpy.core.defchararray import add
 from numpy.core.fromnumeric import resize
 from numpy.testing._private.utils import print_assert_equal
 from xml.dom import minidom
-from DataUtils import paths, save_h5
+from DataUtils import paths, save_h5, add_data_to_h5, create_h5
 import pandas as pd
 
-from data_pipeline.DataUtils import add_data_to_h5, create_h5
 
 PATH_OG = f'{os.path.dirname(__file__)[:-14]}/Datasets/CompleteDataset'
 
@@ -302,14 +301,34 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None, return_
 ######################## Apply Preprocessing and Create h5 File #############################
 ############################################################################################
 
-create_h5(paths(PATH_OG, 'CompleteDataset'), 'AllData.h5')
-file = paths(PATH_OG, 'CompleteDataset', 'AllData.h5')
+create_h5(PATH_OG, 'AllData.h5')
+file = paths(PATH_OG, 'AllData.h5')
+f = h5.File(file, 'w')
+train = f.create_group('train')
+test = f.create_group('test')
+val = f.create_group('val')
 
-for cat in ['test', 'train', 'val']:
-    for label in ['bboxes', 'images', 'masks', 'bins']:
+train.create_group('images')
+train.create_group('masks')
+train.create_group('bboxes')
+train.create_group('bins')
+
+test.create_group('images')
+test.create_group('masks')
+test.create_group('bboxes')
+test.create_group('bins')
+
+val.create_group('images')
+val.create_group('masks')
+val.create_group('bboxes')
+val.create_group('bins')
+
+
+for cat in ['train', 'val']:
+    for label in ['bboxes', 'masks', 'bins']:
         data, ids = load_data(label, cat, resize=np.array([256, 256]))
-        add_data_to_h5(file, label, data, cat, label)
-        add_data_to_h5(file, 'ID', ids, cat, label)
+        add_data_to_h5(file, label, cat, label, data)
+        add_data_to_h5(file, ids, cat, label, 'ID')
         del data
         del ids
 
