@@ -1,3 +1,4 @@
+from PIL import Image
 import h5py as h5
 import os
 import numpy as np
@@ -43,7 +44,7 @@ def add_data_to_h5(file, name, folder, subfolder, data):
     name - name of dataset to be added
     *directory - sequence of strings indicating a group subsystem
     '''
-    with  h5.File(file, 'w') as f:
+    with file as f:
         group = f[folder]
         subgroup = group[subfolder]
         subgroup.create_dataset(name, data=data)
@@ -107,8 +108,8 @@ def load_custom_dataset(key, dataset, indices=None):
             ids = subgrp.get('ID')[:]
     return labels, ids
 
-with h5.File(paths(PATH, 'CompleteDataset', 'AllData.h5')) as f:
-    for key in f.keys():
-        print(key)
-        for k in f[key].keys():
-            print(k)
+#with h5.File(paths(PATH, 'CompleteDataset', 'AllData.h5')) as f:
+#    data = f['val']['masks']
+#    d = data.get('masks')
+#    im = Image.fromarray(d[0] * 100)
+#    im.show()
