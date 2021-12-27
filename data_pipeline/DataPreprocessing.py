@@ -1,8 +1,9 @@
 import h5py as h5
 import os
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 import math
+from numpy.core.fromnumeric import resize
 from numpy.testing._private.utils import print_assert_equal
 from xml.dom import minidom
 from DataUtils import paths, save_h5
@@ -22,7 +23,7 @@ def add_margin(img, top, right, bottom, left, color):
     result.paste(img, (left, top))
     return result
 
-def crop_image(img, height, width):
+def crop_image(img, height, width, png=False):
     '''
     crops input image(PIL Image) to size height x width.
     If image is smaller than these dimensions, it is padded with black (zeros)
@@ -36,7 +37,10 @@ def crop_image(img, height, width):
         left = math.floor(w_diff / 2)
         top = math.ceil(h_diff / 2) 
         bottom = math.floor(h_diff / 2)
-        img = add_margin(img, top, right, bottom, left, (0,0,0))
+        if png:
+            img = add_margin(img, top, right, bottom, left, 2)
+        else:
+            img = add_margin(img, top, right, bottom, left, (0, 0, 0))
     
     w_diff = img.size[0] - width
     h_diff = img.size[1] - height  
@@ -48,69 +52,51 @@ def crop_image(img, height, width):
 
     return img
 
-def array_from_jpg(file_name, crop=None):
+def array_from_jpg(file_name, crop=None, resize=None):
     '''
     Opens a .jpg file and returns a numpy array of H x W x C
     '''
     file = Image.open(file_name)
     if crop is not None:
         file = crop_image(file, crop[0], crop[1])
+    if resize is not None:
+        if crop is None:
+            file = crop_image(file, np.max(file.size), np.max(file.size)) #Pad to square
+        file = file.resize((resize[0], resize[1]))
 
     try:
-        pix = np.array(file.getdata()).reshape(file.size[0], file.size[1], 3)
+        pix = np.array(file.getdata()).reshape(file.size[0], file.size[1], 3).astype(np.uint8)
     except:
         print(f'Failed to convert {file_name} to array!')
-        pix = np.zeros((256, 256, 3))
+        pix = np.zeros((256, 256, 3)).astype(np.uint8)
     file.close()
     return pix
 
-def crop_mask(img, height, width):
-    '''
-    crops input image(PIL Image) to size height x width.
-    If image is smaller than these dimensions, it is padded with black (zeros)
-    '''
-    if img.shape[0] < width or img.shape[1] < height:
-        w_diff = width - img.shape[0]
-        h_diff = height - img.shape[1]
-        w_diff = (np.abs(w_diff) + w_diff) / 2 # zero if wdiff -ve , unchanged if wdiff +ve
-        h_diff = (np.abs(h_diff) + h_diff) / 2    
-        right = math.ceil(w_diff / 2) 
-        left = math.floor(w_diff / 2)
-        top = math.ceil(h_diff / 2) 
-        bottom = math.floor(h_diff / 2)
-        img = np.pad(img, ((left, right), (top, bottom)), constant_values = 2)
 
-        
-    w_diff = img.shape[0] - width
-    h_diff = img.shape[1] - height  
-    right = img.shape[0] - math.ceil(w_diff / 2) 
-    left = math.floor(w_diff / 2)
-    top = math.ceil(h_diff / 2) 
-    bottom = img.shape[1] - math.floor(h_diff / 2)
-    img = img[left:right, top:bottom]
-    return img
-
-
-def array_from_png(file_name, crop=None):
+def array_from_png(file_name, crop=None, resize=None):
     '''
     converts png file to numpy array, with cropping / padding
     '''
     file = Image.open(file_name)
-    try:
-        pix = np.array(file.getdata()).reshape(file.size[0], file.size[1])
-    except:
-        pix = np.zeros((256, 256, 1))
-        print(f'array_from_png failed to convert {file_name} to array!')
 
     if crop is not None:
-        pix = crop_mask(pix, crop[0], crop[1])
+        file = crop_image(file, crop[0], crop[1])
+    if resize is not None:
+        if crop is None:
+            file = crop_image(file, np.max(file.size), np.max(file.size), png=True)
+        file = file.resize((resize[0], resize[1]))
     
-    pix = pix[:, :, None]
+    try:
+        pix = np.array(file.getdata()).reshape(file.size[0], file.size[1]).astype(np.uint8)
+    except:
+        pix = np.zeros((256, 256, 1)).astype(np.uint8)
+        print(f'array_from_png failed to convert {file_name} to array!')
+
     file.close()
 
     return pix
 
-def coords_from_xml(file, crop):
+def coords_from_xml(file, crop, resize):
     '''
     extracts bounding box coordinates from xml file and accounts for image cropping
     '''
@@ -130,6 +116,19 @@ def coords_from_xml(file, crop):
         ymax = crop[0] if ymax - crop[0] > h_diff / 2 else ymax - np.floor(h_diff/2)
         xmin = 0 if xmin < w_diff / 2 else xmin - np.floor(w_diff/2)
         xmax = crop[1] if xmax - crop[1] > w_diff / 2 else xmax - np.floor(w_diff/2)
+    if resize is not None:
+        if crop is None:
+            crop = np.array([max(width, height), max(width, height)])
+            h_diff = height - crop[0]
+            w_diff = width - crop[1]
+            ymin = 0 if ymin < h_diff / 2 else ymin - np.floor(h_diff/2)
+            ymax = crop[0] if ymax - crop[0] > h_diff / 2 else ymax - np.floor(h_diff/2)
+            xmin = 0 if xmin < w_diff / 2 else xmin - np.floor(w_diff/2)
+            xmax = crop[1] if xmax - crop[1] > w_diff / 2 else xmax - np.floor(w_diff/2)
+        xmin = int(xmin * (resize[1] / crop[1]))
+        ymin = int(ymin * (resize[0] / crop[0]))
+        xmax = int(xmax * (resize[1] / crop[1]))
+        ymax = int(ymax * (resize[0] / crop[0]))
 
     return (xmin, ymin, xmax, ymax)
 
@@ -172,12 +171,14 @@ def get_files_bbox(path, extension=None, ind=None, dict=None):
 
     return file_names
 
-def load_data(folder, test_train_val=None, indices=None, crop_size=None, return_dicts=False):
+def load_data(folder, test_train_val=None, indices=None, crop_size=None, return_dicts=False, resize=None):
     '''
     folder: images / masks / bboxes / bins - specifies the type of data to be loaded
     test_train_val: if set to 'train' or 'test' or 'val, uses a default 60:20:20 data split. Default None returns all data
     indices: if None, all data returned, otherwise accepts int or array([int]) to return specific indices of data
     crop_size: array([height, width]) to crop images to. If image is smaller, it will be padded with black
+    return_dicts: whether to return the name_id and id_name dictionaries
+    resize: dimensions to resize image to (after cropping)
     '''
     print(f'Beginning {folder} loading')
     assert folder in ['images', 'masks', 'bboxes', 'bins'], 'Invalid data category. Must be in images / masks / bboxes / bins'
@@ -224,6 +225,10 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None, return_
         assert isinstance(crop_size, np.ndarray)
         assert len(crop_size) == 2
 
+    if resize is not None:
+        assert isinstance(resize, np.ndarray)
+        assert len(resize) == 2
+
     data = []
     ids = []
 
@@ -232,7 +237,7 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None, return_
         file_names = get_files(path, 'jpg', indices, id_names)
 
         for i, name in enumerate(file_names):
-            data.append([array_from_jpg(paths(path, name), crop_size)])  # load numpy array in for every filename
+            data.append(array_from_jpg(paths(path, name), crop_size, resize))  # load numpy array in for every filename
             ids.append(name_id[name[:-4]])
             if (i+1) % 250 == 0:
                 print(f'Loaded {i+1} / {len(file_names)}')
@@ -242,7 +247,7 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None, return_
         path = paths(PATH_OG, 'annotations', 'trimaps')
         file_names = get_files(path, 'png', indices, id_names)
         for i, name in enumerate(file_names):
-            data.append([array_from_png(paths(path, name), crop_size)])
+            data.append(array_from_png(paths(path, name), crop_size, resize))
             ids.append(name_id[name[:-4]])
             if (i+1) % 250 == 0:
                 print(f'Loaded {i+1} / {len(file_names)}')
@@ -252,7 +257,7 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None, return_
         path = paths(PATH_OG, 'annotations', 'xmls')
         file_names = get_files_bbox(path, 'xml', indices, id_names)
         for i, name in enumerate(file_names):
-            data.append([coords_from_xml(paths(path, name), crop_size)])
+            data.append(coords_from_xml(paths(path, name), crop_size, resize))
             ids.append(name_id[name[:-4]])
             if (i+1) % 250 == 0:
                 print(f'Loaded {i+1} / {len(file_names)}')
@@ -281,7 +286,13 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None, return_
         return np.array(data), np.array(ids)
 
 
-#a = load_data('images', test_train_val='train', crop_size=np.array([256, 256]))
+a, _ = load_data('images', resize=np.array([256, 256]), indices=np.array([1]))
+b, _ = load_data('bboxes', resize=np.array([256, 256]), indices=np.array([1]))
+im = Image.fromarray(a[0])
+print(b[0])
+draw = ImageDraw.Draw(im)
+draw.rectangle(b[0].tolist(), width=5)
+im.show()
 
 
 #############################################################################################
@@ -289,10 +300,10 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None, return_
 #############################################################################################
 
 
-images = [load_data('images', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
-masks = [load_data('masks', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
-bboxes = [load_data('bboxes', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
-bins = [load_data('bins', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
-path = paths(PATH_OG, 'CustomDataset.h5')
-
-save_h5(images, masks, bboxes, bins, path)
+#images = [load_data('images', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
+#masks = [load_data('masks', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
+#bboxes = [load_data('bboxes', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
+#bins = [load_data('bins', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
+#path = paths(PATH_OG, 'CustomDataset.h5')
+#
+#save_h5(images, masks, bboxes, bins, path)
