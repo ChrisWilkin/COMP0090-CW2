@@ -5,7 +5,6 @@ from torch.nn.modules import module
 from torch.nn.modules.activation import ReLU
 from torch.nn.modules.batchnorm import BatchNorm2d
 from torch.nn.modules.conv import Conv2d
-from torchvision import models
 
 
 # higher level than tensor flow
