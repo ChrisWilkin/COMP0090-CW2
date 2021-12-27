@@ -14,7 +14,8 @@ class Unet(nn.Module):
         ----Args-----
         k: number of output channels from first layer, which doubles after each block
         in_chns = number of channels in input image
-        n_segments = number of output channels for segmentation"""
+        n_segments = number of output channels for segmentation
+        """
 
         super(Unet,self).__init__()
         
