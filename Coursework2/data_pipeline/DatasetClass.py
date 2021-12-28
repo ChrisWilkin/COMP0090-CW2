@@ -14,7 +14,7 @@ TO DO:
 
 import torch
 from torch.utils.data import Dataset, DataLoader, dataloader
-import DataUtils
+import data_pipeline.DataUtils as DataUtils
 import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -99,7 +99,7 @@ class PetSegmentationDataSet(Dataset):
         
         # remove one of these
         fig.show()
-        #plt.show()
+        plt.show()
         
 
 

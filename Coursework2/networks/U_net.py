@@ -44,7 +44,7 @@ class Unet(nn.Module):
         # im size = 28 x 28
         # 4th conv block, half output channels (8k -> 4k)
         self.conv4 = nn.Sequential(BatchNorm2d(4*k),ReLU(inplace=True),Conv2d(4*k,8*k,kernel_size=3,stride=1,padding=1)
-                                    ,(BatchNorm2d(8*k),ReLU(inplace=True),Conv2d(8*k,8*k,kernel_size=3,stride=1,padding=1)))
+                                    ,BatchNorm2d(8*k),ReLU(inplace=True),Conv2d(8*k,8*k,kernel_size=3,stride=1,padding=1))
         self.upconv1 = nn.Sequential(nn.Upsample(size=(28,28),scale_factor=(2,2), mode='bilinear'), Conv2d(8*k,4*k,kernel_size=3,stride=1,padding=1))
 
         # im size = 56 x 56
