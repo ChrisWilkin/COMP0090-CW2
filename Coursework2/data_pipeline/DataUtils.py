@@ -120,4 +120,3 @@ def summarise_h5_structure(path):
     loop(f)
     return
 
-summarise_h5_structure(paths(PATH, 'CompleteDataset', 'AllData.h5'))
