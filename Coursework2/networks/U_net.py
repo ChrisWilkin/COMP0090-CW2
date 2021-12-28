@@ -7,7 +7,6 @@ from torch.nn.modules.batchnorm import BatchNorm2d
 from torch.nn.modules.conv import Conv2d
 
 
-
 # higher level than tensor flow
 class Unet(nn.Module):
     def __init__(self,k=32,in_chns=3,n_segments=2):
@@ -15,7 +14,8 @@ class Unet(nn.Module):
         ----Args-----
         k: number of output channels from first layer, which doubles after each block
         in_chns = number of channels in input image
-        n_segments = number of output channels for segmentation"""
+        n_segments = number of output channels for segmentation
+        """
 
         super(Unet,self).__init__()
         
@@ -34,43 +34,42 @@ class Unet(nn.Module):
                                     ,BatchNorm2d(2*k),ReLU(inplace=True),Conv2d(2*k,2*k,kernel_size=3,stride=1,padding=1))
         self.maxpool2 = nn.MaxPool2d(kernel_size=2,stride=2,padding=0)
 
-        # im size = 56 x 56
+        # im size = 64 x 64
         # 3rd conv block, double output channels (2k -> 4k)
         self.conv3 = nn.Sequential(BatchNorm2d(2*k),ReLU(inplace=True),Conv2d(2*k,4*k,kernel_size=3,stride=1,padding=1)
                                     ,BatchNorm2d(4*k),ReLU(inplace=True),Conv2d(4*k,4*k,kernel_size=3,stride=1,padding=1))
         self.maxpool3 = nn.MaxPool2d(kernel_size=2,stride=2,padding=0)
 
         # Bottom of U-net
-        # im size = 28 x 28
+        # im size = 32 x 32
         # 4th conv block, half output channels (8k -> 4k)
         self.conv4 = nn.Sequential(BatchNorm2d(4*k),ReLU(inplace=True),Conv2d(4*k,8*k,kernel_size=3,stride=1,padding=1)
                                     ,(BatchNorm2d(8*k),ReLU(inplace=True),Conv2d(8*k,8*k,kernel_size=3,stride=1,padding=1)))
-        self.upconv1 = nn.Sequential(nn.Upsample(size=(28,28),scale_factor=(2,2), mode='bilinear'), Conv2d(8*k,4*k,kernel_size=2,stride=1,padding=1))
+        self.upconv1 = nn.Sequential(nn.Upsample(size=(32,32),scale_factor=(2,2), mode='bilinear'), Conv2d(8*k,4*k,kernel_size=3,stride=1,padding=1))
 
-        # im size = 56 x 56
-        # 5th conv block, concat input with output from 3rd block. 
-        # Input = 4k + 4k = 8k
+        # im size = 64 x 64
+        # 5th conv block, concat output from 4th and 3rd block to use as inputs. 
+        # Input channels = 4k + 4k = 8k
         # output channels reduced by 4 vs input (8k -> 2k)
         self.conv5 = nn.Sequential(BatchNorm2d(8*k),ReLU(inplace=True),Conv2d(8*k,4*k,kernel_size=3,stride=1,padding=1)
                                     ,BatchNorm2d(4*k),ReLU(inplace=True),Conv2d(4*k,4*k,kernel_size=3,stride=1,padding=1))
-        self.upconv2 = nn.Sequential(nn.Upsample(size=(56,56),scale_factor=(2,2), mode='bilinear'), Conv2d(4*k,2*k,kernel_size=2,stride=1,padding=1))
+        self.upconv2 = nn.Sequential(nn.Upsample(size=(64,64),scale_factor=(2,2), mode='bilinear'), Conv2d(4*k,2*k,kernel_size=3,stride=1,padding=1))
 
         # im size = 128 x 128
-        # 6th conv block, concat input with output from 2nd block. 
-        # Input = 2k + 2k = 4k
+        # 6th conv block, concat outputs from 5th and 2nd blocks to use as inputs.
+        # Input channels = 2k + 2k = 4k
         # output channels reduced by 4 vs input (4k -> k)
         self.conv6 = nn.Sequential(BatchNorm2d(4*k),ReLU(inplace=True),Conv2d(4*k,2*k,kernel_size=3,stride=1,padding=1)
                                     ,BatchNorm2d(2*k),ReLU(inplace=True),Conv2d(2*k,2*k,kernel_size=3,stride=1,padding=1))
-        self.upconv3 = nn.Sequential(nn.Upsample(size=(128,128),scale_factor=(2,2), mode='bilinear'), Conv2d(2*k,k,kernel_size=2,stride=1,padding=1))
+        self.upconv3 = nn.Sequential(nn.Upsample(size=(128,128),scale_factor=(2,2), mode='bilinear'), Conv2d(2*k,k,kernel_size=3,stride=1,padding=1))
 
         # im size = 256 x 256
         # 7th and final  conv block, concat input with output from 1st block. 
-        # Input = k + 2 = 2k
-        # output
+        # Input = k + k = 2k
         self.conv7 = nn.Sequential(BatchNorm2d(2*k),ReLU(inplace=True),Conv2d(2*k,k,kernel_size=3,stride=1,padding=1)
                                     ,BatchNorm2d(k),ReLU(inplace=True),Conv2d(k,k,kernel_size=3,stride=1,padding=1)
         # final prediction layer for segmentation
-                                   ,BatchNorm2d(k),ReLU(inplace=True),Conv2d(k,n_segments,kernel_size=3,stride=1,padding=1))
+                                   ,Conv2d(k,n_segments,kernel_size=3,stride=1,padding=1))
 
     def forward(self,x):
 
@@ -100,4 +99,3 @@ class Unet(nn.Module):
         out7 = self.conv7(torch.cat([upconv3,out1]))
 
         return out7
-

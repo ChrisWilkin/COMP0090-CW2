@@ -3,11 +3,13 @@ import os
 import numpy as np
 from PIL import Image, ImageDraw
 import math
+from numpy.core.defchararray import add
 from numpy.core.fromnumeric import resize
 from numpy.testing._private.utils import print_assert_equal
 from xml.dom import minidom
-from DataUtils import paths, save_h5
+from DataUtils import paths, add_data_to_h5
 import pandas as pd
+
 
 PATH_OG = f'{os.path.dirname(__file__)[:-14]}/Datasets/CompleteDataset'
 
@@ -286,24 +288,26 @@ def load_data(folder, test_train_val=None, indices=None, crop_size=None, return_
         return np.array(data), np.array(ids)
 
 
-a, _ = load_data('images', resize=np.array([256, 256]), indices=np.array([1]))
-b, _ = load_data('bboxes', resize=np.array([256, 256]), indices=np.array([1]))
-im = Image.fromarray(a[0])
-print(b[0])
-draw = ImageDraw.Draw(im)
-draw.rectangle(b[0].tolist(), width=5)
-im.show()
 
 
 #############################################################################################
 ######################## Apply Preprocessing and Create h5 File #############################
-#############################################################################################
+############################################################################################
 
-
-#images = [load_data('images', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
-#masks = [load_data('masks', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
-#bboxes = [load_data('bboxes', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
-#bins = [load_data('bins', test_train_val=grp, crop_size=np.array([256, 256])) for grp in ['train', 'test', 'val']]
-#path = paths(PATH_OG, 'CustomDataset.h5')
+#file = paths(PATH_OG, 'AllData.h5')
+#print(file)
+#f = h5.File(file, 'w')
+#train = f.create_group('train')
+#test = f.create_group('test')
+#val = f.create_group('val')
 #
-#save_h5(images, masks, bboxes, bins, path)
+#for cat in ['test', 'train', 'val']:
+#    for label in ['images','bboxes', 'masks', 'bins']:
+#        data, ids = load_data(label, cat, resize=np.array([256, 256]))
+#        f.create_group(f'/{cat}/{label}')
+#        f.create_dataset(f'/{cat}/{label}/{label}', data=data)
+#        f.create_dataset(f'/{cat}/{label}/ID', data=ids)
+#        del data
+#        del ids
+#        print(f.keys())
+#f.close()
