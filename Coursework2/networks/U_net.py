@@ -44,17 +44,12 @@ class Unet(nn.Module):
         # im size = 32 x 32
         # 4th conv block, half output channels (8k -> 4k)
         self.conv4 = nn.Sequential(BatchNorm2d(4*k),ReLU(inplace=True),Conv2d(4*k,8*k,kernel_size=3,stride=1,padding=1)
-<<<<<<< HEAD:networks/U_net.py
                                     ,(BatchNorm2d(8*k),ReLU(inplace=True),Conv2d(8*k,8*k,kernel_size=3,stride=1,padding=1)))
         self.upconv1 = nn.Sequential(nn.Upsample(size=(32,32),scale_factor=(2,2), mode='bilinear'), Conv2d(8*k,4*k,kernel_size=3,stride=1,padding=1))
-=======
-                                    ,BatchNorm2d(8*k),ReLU(inplace=True),Conv2d(8*k,8*k,kernel_size=3,stride=1,padding=1))
-        self.upconv1 = nn.Sequential(nn.Upsample(size=(28,28),scale_factor=(2,2), mode='bilinear'), Conv2d(8*k,4*k,kernel_size=3,stride=1,padding=1))
->>>>>>> 39ce70d1cdf72ab1d094475f8ae46ce05869db0e:Coursework2/networks/U_net.py
 
         # im size = 64 x 64
         # 5th conv block, concat output from 4th and 3rd block to use as inputs. 
-        # Input channels = 4k + 4k = 8k
+        # Input channels = 4k + 4k = 8kd
         # output channels reduced by 4 vs input (8k -> 2k)
         self.conv5 = nn.Sequential(BatchNorm2d(8*k),ReLU(inplace=True),Conv2d(8*k,4*k,kernel_size=3,stride=1,padding=1)
                                     ,BatchNorm2d(4*k),ReLU(inplace=True),Conv2d(4*k,4*k,kernel_size=3,stride=1,padding=1))
