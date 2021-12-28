@@ -33,26 +33,26 @@ class Unet(nn.Module):
                                     ,BatchNorm2d(2*k),ReLU(inplace=True),Conv2d(2*k,2*k,kernel_size=3,stride=1,padding=1))
         self.maxpool2 = nn.MaxPool2d(kernel_size=2,stride=2,padding=0)
 
-        # im size = 56 x 56
+        # im size = 64 x 64
         # 3rd conv block, double output channels (2k -> 4k)
         self.conv3 = nn.Sequential(BatchNorm2d(2*k),ReLU(inplace=True),Conv2d(2*k,4*k,kernel_size=3,stride=1,padding=1)
                                     ,BatchNorm2d(4*k),ReLU(inplace=True),Conv2d(4*k,4*k,kernel_size=3,stride=1,padding=1))
         self.maxpool3 = nn.MaxPool2d(kernel_size=2,stride=2,padding=0)
 
         # Bottom of U-net
-        # im size = 28 x 28
+        # im size = 32 x 32
         # 4th conv block, half output channels (8k -> 4k)
         self.conv4 = nn.Sequential(BatchNorm2d(4*k),ReLU(inplace=True),Conv2d(4*k,8*k,kernel_size=3,stride=1,padding=1)
                                     ,(BatchNorm2d(8*k),ReLU(inplace=True),Conv2d(8*k,8*k,kernel_size=3,stride=1,padding=1)))
-        self.upconv1 = nn.Sequential(nn.Upsample(size=(28,28),scale_factor=(2,2), mode='bilinear'), Conv2d(8*k,4*k,kernel_size=3,stride=1,padding=1))
+        self.upconv1 = nn.Sequential(nn.Upsample(size=(32,32),scale_factor=(2,2), mode='bilinear'), Conv2d(8*k,4*k,kernel_size=3,stride=1,padding=1))
 
-        # im size = 56 x 56
+        # im size = 64 x 64
         # 5th conv block, concat output from 4th and 3rd block to use as inputs. 
         # Input channels = 4k + 4k = 8k
         # output channels reduced by 4 vs input (8k -> 2k)
         self.conv5 = nn.Sequential(BatchNorm2d(8*k),ReLU(inplace=True),Conv2d(8*k,4*k,kernel_size=3,stride=1,padding=1)
                                     ,BatchNorm2d(4*k),ReLU(inplace=True),Conv2d(4*k,4*k,kernel_size=3,stride=1,padding=1))
-        self.upconv2 = nn.Sequential(nn.Upsample(size=(56,56),scale_factor=(2,2), mode='bilinear'), Conv2d(4*k,2*k,kernel_size=3,stride=1,padding=1))
+        self.upconv2 = nn.Sequential(nn.Upsample(size=(64,64),scale_factor=(2,2), mode='bilinear'), Conv2d(4*k,2*k,kernel_size=3,stride=1,padding=1))
 
         # im size = 128 x 128
         # 6th conv block, concat outputs from 5th and 2nd blocks to use as inputs.
