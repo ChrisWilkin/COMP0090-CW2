@@ -5,6 +5,11 @@ from torch.nn.modules import module
 from torch.nn.modules.activation import ReLU
 from torch.nn.modules.batchnorm import BatchNorm2d
 from torch.nn.modules.conv import Conv2d
+from data_pipeline.DatasetClass import PetSegmentationDataSet
+import sys
+import os
+sys.path.append(os.path.dirname(__file__)[:-len('/networks')]) #Import other folders after this line
+
 
 
 # higher level than tensor flow
