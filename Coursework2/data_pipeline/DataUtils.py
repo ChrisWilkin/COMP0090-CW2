@@ -4,7 +4,8 @@ import os
 import numpy as np
 from numpy.lib.npyio import save
 from numpy.testing._private.utils import print_assert_equal
-
+import sys
+sys.path.append(os.path.dirname(__file__)[:-len('/data_pipeline')])
 
 PATH = f'{os.path.dirname(__file__)[:-14]}/datasets'
 HEIGHT = 256
