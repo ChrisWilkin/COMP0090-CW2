@@ -10,8 +10,6 @@ import sys
 import os
 sys.path.append(os.path.dirname(__file__)[:-len('/networks')]) #Import other folders after this line
 
-
-
 # higher level than tensor flow
 class Unet(nn.Module):
     def __init__(self,k=32,in_chns=3,n_segments=2):
