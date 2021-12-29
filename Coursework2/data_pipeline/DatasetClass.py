@@ -103,9 +103,9 @@ class PetSegmentationDataSet(Dataset):
         
 
 
-dataset = PetSegmentationDataSet('test', 'mask')
-dataloader = DataLoader(dataset, batch_size=1, shuffle=True, num_workers=0)
-print(dataset.__len__())
-dataset.visualize_data()
+#dataset = PetSegmentationDataSet('test', 'mask')
+#dataloader = DataLoader(dataset, batch_size=1, shuffle=True, num_workers=0)
+#print(dataset.__len__())
+#dataset.visualize_data()
 
 
