@@ -11,6 +11,12 @@ import os
 import numpy as np
 sys.path.append(os.path.dirname(__file__)[:-len('/networks')]) #Import other folders after this line
 
+
+class DetectionLayer(nn.Module):
+    def __init__(self, anchors):
+        super(DetectionLayer, self).__init__()
+        self.anchors = anchors 
+
 class Skip(nn.Module):
     def __init__(self):
         super(Skip, self).__init__()
@@ -18,7 +24,7 @@ class Skip(nn.Module):
     def forward(self, x):
         return x
 
-def generate_blocks(feat1, feat2, n, ind):
+def generate_conv_blocks(feat1, feat2, n, ind):
     '''
     inputs - Number of feature maps sent into the block
     feat1 - Number of output feature2 for 1x1 Conv
@@ -53,6 +59,38 @@ def generate_blocks(feat1, feat2, n, ind):
     
     return blocks, np.array(filters)
 
+def generate_pool_blocks(feat1, feat2, mask):
+    blocks = nn.ModuleList()
+    input_1 = feat2
+    input_2 = 2 * feat2
+    filters = []
+    anchors = [[10,13], [16,30], [33,23], [30,61], [62,45], [59,119], [116,90], [156,198], [373,326]]
+
+    for i in range(3):
+        block = nn.Sequential()
+        block.add_module(f'conv1x1_{i}', nn.Conv2d(feat2 if i != 0 else 2 * feat2, feat1, 1, 1, 0))
+        block.add_module(f'BN_{i}', nn.BatchNorm2d(feat1))
+        block.add_module(f'LeakyReLU', nn.LeakyReLU())
+        blocks.add_module(module=block)
+
+        block = nn.Sequential()
+        block.add_module(f'conv3x3_{i}', nn.Conv2d(feat1, feat2, 3, 1, 1))
+        block.add_module(f'BN_{i}', nn.BatchNorm2d(feat2))
+        block.add_module(f'LeakyReLU', nn.LeakyReLU())
+        blocks.add_module(module=block)
+
+    block = nn.Sequential()
+    block.add_module(f'conv1x1_{i}', nn.Conv2d(feat2, (feat1 / 2) - 1, 1, 1, 0))
+    block.add_module(f'ReLU', nn.ReLU())
+    blocks.add_module(module=block)   
+
+
+    # YOLO layer
+    a = []
+    for mask in ma
+        
+    return blocks
+    
 
 class YOLO(nn.Module):
     def __init__(self):
@@ -64,24 +102,32 @@ class YOLO(nn.Module):
         block = nn.Sequential()
         block.add_module('conv_0', nn.Conv2d(3, 32, 3, stride=1, padding=1, bias=False))
         block.add_module('batch_norm_0', nn.BatchNorm2d(32))
-        block.add_module('leaky_0'nn.LeakyReLU())
+        block.add_module('leaky_0', nn.LeakyReLU())
         self.features.add_module(module=block)
 
         for i, n in enumerate([1,2,8,8,4]):
             inputs = 64 * (2**n)
             #BLOCK 
-            blocks, f = generate_blocks(inputs, 64, n)
+            blocks, f = generate_conv_blocks(inputs, 64, n)
             self.filters = np.concatenate((self.features, f))
             self.features.extend(blocks)
 
             block = nn.Sequential()
-            block.add_module(f'conv_{i+1}', nn.Conv2d(inputs if n != 1 else inputs/2, 64, 1, stride=2, padding=1, bias=False))
+            block.add_module(f'conv_{i+1}', nn.Conv2d(inputs if n != 1 else inputs/2, 64, 3 stride=2, padding=1, bias=False))
             block.add_module(f'batch_norm_{i+1}', nn.BatchNorm2d(364))
             block.add_module(f'leaky_{i+1}', nn.LeakyReLU())
             self.features.add_module(module=block)
 
+        ########### AvgPool - Connected - Softmax ##############
+
+            
+
+
+        
+
     def forward(self, x):
-        for item in self.
+        for item in self.blocks:
+            pass
         return x
 
 
