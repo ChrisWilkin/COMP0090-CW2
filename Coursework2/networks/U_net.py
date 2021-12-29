@@ -5,6 +5,11 @@ from torch.nn.modules import module
 from torch.nn.modules.activation import ReLU
 from torch.nn.modules.batchnorm import BatchNorm2d
 from torch.nn.modules.conv import Conv2d
+from data_pipeline.DatasetClass import PetSegmentationDataSet
+import sys
+import os
+sys.path.append(os.path.dirname(__file__)[:-len('/networks')]) #Import other folders after this line
+
 
 
 # higher level than tensor flow
@@ -49,7 +54,7 @@ class Unet(nn.Module):
 
         # im size = 64 x 64
         # 5th conv block, concat output from 4th and 3rd block to use as inputs. 
-        # Input channels = 4k + 4k = 8k
+        # Input channels = 4k + 4k = 8kd
         # output channels reduced by 4 vs input (8k -> 2k)
         self.conv5 = nn.Sequential(BatchNorm2d(8*k),ReLU(inplace=True),Conv2d(8*k,4*k,kernel_size=3,stride=1,padding=1)
                                     ,BatchNorm2d(4*k),ReLU(inplace=True),Conv2d(4*k,4*k,kernel_size=3,stride=1,padding=1))
