@@ -48,8 +48,8 @@ class Unet(nn.Module):
         # im size = 32 x 32
         # 4th conv block, half output channels (8k -> 4k)
         self.conv4 = nn.Sequential(BatchNorm2d(4*k),ReLU(inplace=True),Conv2d(4*k,8*k,kernel_size=3,stride=1,padding=1)
-                                    ,(BatchNorm2d(8*k),ReLU(inplace=True),Conv2d(8*k,8*k,kernel_size=3,stride=1,padding=1)))
-        self.upconv1 = nn.Sequential(nn.Upsample(size=(32,32),scale_factor=(2,2), mode='bilinear'), Conv2d(8*k,4*k,kernel_size=3,stride=1,padding=1))
+                                    ,BatchNorm2d(8*k),ReLU(inplace=True),Conv2d(8*k,8*k,kernel_size=3,stride=1,padding=1))
+        self.upconv1 = nn.Sequential(nn.Upsample(scale_factor=(2,2), mode='bilinear'), Conv2d(8*k,4*k,kernel_size=3,stride=1,padding=1))
 
         # im size = 64 x 64
         # 5th conv block, concat output from 4th and 3rd block to use as inputs. 
@@ -57,7 +57,7 @@ class Unet(nn.Module):
         # output channels reduced by 4 vs input (8k -> 2k)
         self.conv5 = nn.Sequential(BatchNorm2d(8*k),ReLU(inplace=True),Conv2d(8*k,4*k,kernel_size=3,stride=1,padding=1)
                                     ,BatchNorm2d(4*k),ReLU(inplace=True),Conv2d(4*k,4*k,kernel_size=3,stride=1,padding=1))
-        self.upconv2 = nn.Sequential(nn.Upsample(size=(64,64),scale_factor=(2,2), mode='bilinear'), Conv2d(4*k,2*k,kernel_size=3,stride=1,padding=1))
+        self.upconv2 = nn.Sequential(nn.Upsample(scale_factor=(2,2), mode='bilinear'), Conv2d(4*k,2*k,kernel_size=3,stride=1,padding=1))
 
         # im size = 128 x 128
         # 6th conv block, concat outputs from 5th and 2nd blocks to use as inputs.
@@ -65,7 +65,7 @@ class Unet(nn.Module):
         # output channels reduced by 4 vs input (4k -> k)
         self.conv6 = nn.Sequential(BatchNorm2d(4*k),ReLU(inplace=True),Conv2d(4*k,2*k,kernel_size=3,stride=1,padding=1)
                                     ,BatchNorm2d(2*k),ReLU(inplace=True),Conv2d(2*k,2*k,kernel_size=3,stride=1,padding=1))
-        self.upconv3 = nn.Sequential(nn.Upsample(size=(128,128),scale_factor=(2,2), mode='bilinear'), Conv2d(2*k,k,kernel_size=3,stride=1,padding=1))
+        self.upconv3 = nn.Sequential(nn.Upsample(scale_factor=(2,2), mode='bilinear'), Conv2d(2*k,k,kernel_size=3,stride=1,padding=1))
 
         # im size = 256 x 256
         # 7th and final  conv block, concat input with output from 1st block. 
@@ -76,7 +76,7 @@ class Unet(nn.Module):
                                    ,Conv2d(k,n_segments,kernel_size=3,stride=1,padding=1))
 
     def forward(self,x):
-
+        x = x.double()
         #1st convolutional block
         out1 = self.conv1(x)
         maxpool1 = self.maxpool1(out1)
@@ -100,6 +100,6 @@ class Unet(nn.Module):
         upconv3 = self.upconv3(out6)
         #7th and final block
         #concat input from 6th and 1st block
-        out7 = self.conv7(torch.cat([upconv3,out1]))
+        out7 = self.conv7(torch.cat([upconv3,out1],1))
 
         return out7

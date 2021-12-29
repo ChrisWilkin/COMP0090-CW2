@@ -6,7 +6,7 @@ from numpy.lib.npyio import save
 from numpy.testing._private.utils import print_assert_equal
 
 
-PATH = f'{os.path.dirname(__file__)[:-14]}/datasets'
+PATH = f'{os.path.dirname(__file__)[:-14]}/Datasets'
 HEIGHT = 256
 WIDTH = 256
 
