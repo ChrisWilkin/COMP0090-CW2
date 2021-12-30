@@ -13,8 +13,10 @@ def get_test_input():
     img = np.asarray(img.resize((256,256)))         #Resize to the input dimension
     img_ =  img[:,:,::-1].transpose((2,0,1))  # BGR -> RGB | H X W C -> C X H X W 
     img_ = img_[np.newaxis,:,:,:]/255.0       #Add a channel at 0 (for batch) | Normalise
-    img_ = torch.from_numpy(img_).float()     #Convert to float
-    img_ = Variable(img_)                     # Convert to Variable
+    img_ = torch.from_numpy(img_).float()
+    if torch.cuda.is_available():
+        img_ = img_.to('cuda')      #Convert to float
+    img_ = Variable(img_)               # Convert to Variable
     return img_
     
 
@@ -56,7 +58,7 @@ class Route(nn.Module):
     def layers(self):
         return self.layer
 
-def generate_conv_blocks(feat1, n, first=False):
+def generate_conv_blocks(feat1, n):
     '''
     inputs - Number of feature maps sent into the block
     feat1 - Number of output feature2 for 1x1 Conv
@@ -70,7 +72,6 @@ def generate_conv_blocks(feat1, n, first=False):
     count = 0
     feat2 = 2 * feat1
     blocks = nn.ModuleList() 
-    filters = []
 
     block = nn.Sequential()
     block.add_module(f'conv3x3', nn.Conv2d(feat1, feat2, 3, 2, 1))
@@ -78,7 +79,6 @@ def generate_conv_blocks(feat1, n, first=False):
     block.add_module(f'Leaky', nn.LeakyReLU())
     blocks.add_module(f'{count}', module=block)
     count += 1
-    filters.append(feat2)
 
     for i in range(n):
         block = nn.Sequential()
@@ -87,7 +87,6 @@ def generate_conv_blocks(feat1, n, first=False):
         block.add_module(f'Leaky_{i}', nn.LeakyReLU())
         blocks.add_module(f'{count}', module=block)
         count += 1
-        filters.append(feat1)
         
         block = nn.Sequential()
         block.add_module(f'conv3x3_{i}', nn.Conv2d(feat1, feat2, 3, 1, 1))
@@ -95,15 +94,13 @@ def generate_conv_blocks(feat1, n, first=False):
         block.add_module(f'Leaky_{i }', nn.LeakyReLU())
         blocks.add_module(f'{count}', module=block)
         count += 1
-        filters.append(feat2)
         
         blocks.add_module(f'{count}', Skip(-3))
         count += 1
-        filters.append(2 * feat2)
     
-    return blocks, np.array(filters)
+    return blocks
 
-def generate_pool_blocks(feat1, feat2, mask):
+def generate_pool_blocks(feat1, feat2, mask, n):
     '''
     feat1 - number of filters outputted by 1x1 conv
     feat2 - number of filters outputted by 3x3 conv
@@ -115,17 +112,15 @@ def generate_pool_blocks(feat1, feat2, mask):
     '''
     count = 0
     blocks = nn.ModuleList()
-    filters = []
     anchors = [[10,13], [16,30], [33,23], [30,61], [62,45], [59,119], [116,90], [156,198], [373,326]]
 
     for i in range(3):
         block = nn.Sequential()
-        block.add_module(f'conv1x1_{i}', nn.Conv2d(feat2, feat1, 1, 1, 0))
+        block.add_module(f'conv1x1_{i}', nn.Conv2d(feat2 + feat1 if ((n==1 or n==2) and i ==0) else feat2, feat1, 1, 1, 0))
         block.add_module(f'BN_{i}', nn.BatchNorm2d(feat1))
         block.add_module(f'LeakyReLU', nn.LeakyReLU())
         blocks.add_module(f'{count}', module=block)
         count += 1
-        filters.append(feat1)
 
         block = nn.Sequential()
         block.add_module(f'conv3x3_{i}', nn.Conv2d(feat1, feat2, 3, 1, 1))
@@ -133,22 +128,19 @@ def generate_pool_blocks(feat1, feat2, mask):
         block.add_module(f'LeakyReLU', nn.LeakyReLU())
         blocks.add_module(f'{count}', module=block)
         count += 1
-        filters.append(feat2)
 
     block = nn.Sequential()
-    block.add_module(f'conv1x1_{i}', nn.Conv2d(feat2, int(feat1 / 2) - 1, 1, 1, 0))
+    block.add_module(f'conv1x1_{i}', nn.Conv2d(feat2, 21, 1, 1, 0))
     block.add_module(f'ReLU', nn.ReLU())
     blocks.add_module(f'{count}', module=block)   
     count += 1
-    filters.append((feat1 / 2) - 1)
-
 
     # YOLO layer
     anchors = [anchors[i] for i in mask]
     detection = DetectionLayer(anchors)
     blocks.add_module(f'{count}', detection)
         
-    return blocks, filters
+    return blocks
     
 def prediction_transforms(pred, inp, anchors, classes, gpu=False):
     '''
@@ -207,10 +199,9 @@ class YOLO(nn.Module):
         self.height=256
         self.channels=3
         self.learning_rate=0.001
-        self.filters = np.array([0])
         self.mod_count = 0
         # intial convolutions
-        self.features = nn.ModuleList()
+        self.features = nn.ModuleList().to('cuda')
         block = nn.Sequential()
         block.add_module('conv_0', nn.Conv2d(3, 32, 3, stride=1, padding=1, bias=False))
         block.add_module('batch_norm_0', nn.BatchNorm2d(32))
@@ -220,11 +211,8 @@ class YOLO(nn.Module):
 
         for i, n in enumerate([1,2,8,8,4]):
             inputs = 32 * (2**i)
-            print(inputs)
             #BLOCK 
-            blocks, f = generate_conv_blocks(inputs, n, True if i == 0 else False)
-            self.filters = np.concatenate((self.filters, f))
-            #self.features.extend(blocks)
+            blocks = generate_conv_blocks(inputs, n)
             for mod in blocks:
                 self.features.add_module(f'{self.mod_count}', mod)
                 self.mod_count += 1
@@ -239,8 +227,7 @@ class YOLO(nn.Module):
 
             
         for i, (mask, route) in enumerate(zip([[6,7,8], [3,4,5], [0,1,2]], [61, 36, None])):
-            blocks, f = generate_pool_blocks(128 * (2 ** (2-i)), 256 * (2 ** (2-i)), mask)
-            self.filters = np.concatenate((self.features, f))
+            blocks = generate_pool_blocks(128 * (2 ** (2-i)), 256 * (2 ** (2-i)), mask, i)
             #self.features.extend(blocks)
             for mod in blocks:
                 self.features.add_module(f'{self.mod_count}', mod)
@@ -250,7 +237,7 @@ class YOLO(nn.Module):
                 feat1 = 128 * (2 ** (2-i))
                 self.features.add_module(f'{self.mod_count}', Route([-4, 0]))
                 self.mod_count += 1
-                self.features.add_module(f'{self.mod_count}', nn.Upsample(scale_factor=2, mode='bilinear'))
+                self.features.add_module(f'{self.mod_count}', nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True))
                 self.mod_count += 1
                 self.features.add_module(f'{self.mod_count}', nn.Sequential(nn.Conv2d(feat1, int(feat1/2), 1, 1, 0),
                                                                 nn.BatchNorm2d(int(feat1/2)),
@@ -259,7 +246,6 @@ class YOLO(nn.Module):
                 self.features.add_module(f'{self.mod_count}', Route([-1, route]))
                 self.mod_count += 1
 
-        self.filters = self.filters[1:] #Remove unnecessary first 0
         #for name, module in self.features.named_children():
         #    print(name, module)
 
@@ -268,7 +254,7 @@ class YOLO(nn.Module):
         mods = self.features
         write = 0
         for i, mod in enumerate(mods):
-            print(i, x.shape, type(mod))
+            #print(i, x.shape, type(mod))
             if isinstance(mod, nn.Sequential):
                 x = self.features[i](x)
 
@@ -285,10 +271,8 @@ class YOLO(nn.Module):
                 
 
                 if layers[1] == 0:
-                    print(x.shape)
                     x = outputs[i + (layers[0])]
-                    print(x.shape)
-
+                    
                 else:
                     if (layers[1]) > 0:
                         layers[1] = layers[1] - i
@@ -301,7 +285,7 @@ class YOLO(nn.Module):
             elif isinstance(mod, DetectionLayer):
                 anchors = mod.anchors()
                 inp = 256
-                classes = 80
+                classes = 2
                 x = x.data
                 x = prediction_transforms(x, inp, anchors, classes, gpu)
                 if not write:
@@ -317,7 +301,9 @@ class YOLO(nn.Module):
 
         return detections
 
-net = YOLO()
+print('Using GPU' if torch.cuda.is_available() else 'Using CPU')
+
+net = YOLO().to('cuda' if torch.cuda.is_available() else 'cpu')
 inp = get_test_input()
-pred = net(inp, False)
+pred = net(inp, torch.cuda.is_available())
 print(pred)
