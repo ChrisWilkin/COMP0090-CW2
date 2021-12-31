@@ -94,6 +94,13 @@ def load_group_h5(path,group_name):
     return bbox, bin, images, masks
     
 def load_custom_dataset(key, dataset, indices=None):
+    '''
+    key: ['Testing', 'Training', 'Validation']
+    dataset: ['Images', 'Masks', 'BBoxes', 'Bins']
+    indices: Optional list of indices to select
+
+    returns: Labels, IDs
+    '''
     datasets = {'Images': 'ims', 'Masks': 'masks', 'BBoxes': 'bboxes', 'Bins': 'bins'}
     assert key in ['Testing', 'Training', 'Validation']
     assert dataset in ['Images', 'Masks', 'BBoxes', 'Bins']
@@ -102,8 +109,12 @@ def load_custom_dataset(key, dataset, indices=None):
         grp = file[key]
         subgrp = grp[dataset]
         if indices is not None:
-            labels = subgrp.get(datasets[dataset])[indices].astype(np.uint8)
-            ids = subgrp.get('ID')[:]
+            labels = subgrp.get(datasets[dataset])[indices].astype(np.uint8).copy()
+            ids = subgrp.get('ID')[indices].copy()
+        else:
+            labels = subgrp.get(datasets[dataset]).astype(np.uint8).copy()
+            ids = subgrp.get('ID').copy()
+    
     return labels, ids
 
 def summarise_h5_structure(path):

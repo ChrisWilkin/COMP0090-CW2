@@ -2,7 +2,10 @@
 
 from os import write
 import torch
-import networks.YOLO as Y
+import sys
+import os
+sys.path.append(os.path.dirname(__file__)[:-len('/networks')]) #Import other folders after this line
+import YOLO as Y
 
 def calc_iou(box1, box2):
     """
@@ -115,11 +118,5 @@ def process_results(pred, thresh=0.5, nms_thresh=0.4):
     else:
         return None
 
-#print('Using GPU' if torch.cuda.is_available() else 'Using CPU')
 
-net = Y.YOLO()#.to('cuda' if torch.cuda.is_available() else 'cpu')
-inp = Y.get_test_input()
-pred = net(inp, False)
-pred = process_results(pred)
-print(pred)
-print(pred.shape)
+
