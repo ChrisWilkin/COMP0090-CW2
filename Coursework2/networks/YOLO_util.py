@@ -87,8 +87,14 @@ def process_results(pred, thresh=0.5, nms_thresh=0.4):
 
             # loop through each detection and perform nms
             for i in range (indices):
-                iou = calc_iou(pred_class[i].unsqueeze(0), pred_class[i+1:])
-                print('iou.shape = ', iou)
+
+                try: 
+                    iou = calc_iou(pred_class[i].unsqueeze(0), pred_class[i+1:])
+                except ValueError:
+                    break
+                except IndexError:
+                    break
+                #print('iou.shape = ', iou)
                 # remove values below the treshold
                 iou_mask = (iou < nms_thresh).unsqueeze(1)
                 pred_class[i+1:] = pred_class[i+1:]  * iou_mask
