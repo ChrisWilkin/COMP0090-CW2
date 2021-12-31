@@ -1,6 +1,8 @@
 # adapted from https://blog.paperspace.com/how-to-implement-a-yolo-v3-object-detector-from-scratch-in-pytorch-part-4/
 
+from os import write
 import torch
+import networks.YOLO as Y
 
 def calc_iou(box1, box2):
     """
@@ -106,3 +108,12 @@ def process_results(pred, thresh=0.5, nms_thresh=0.4):
         return results
     else:
         return None
+
+#print('Using GPU' if torch.cuda.is_available() else 'Using CPU')
+
+net = Y.YOLO()#.to('cuda' if torch.cuda.is_available() else 'cpu')
+inp = Y.get_test_input()
+pred = net(inp, False)
+pred = process_results(pred)
+print(pred)
+print(pred.shape)

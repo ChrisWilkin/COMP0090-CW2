@@ -14,8 +14,7 @@ def get_test_input():
     img_ =  img[:,:,::-1].transpose((2,0,1))  # BGR -> RGB | H X W C -> C X H X W 
     img_ = img_[np.newaxis,:,:,:]/255.0       #Add a channel at 0 (for batch) | Normalise
     img_ = torch.from_numpy(img_).float()
-    if torch.cuda.is_available():
-        img_ = img_.to('cuda')      #Convert to float
+          #Convert to float
     img_ = Variable(img_)               # Convert to Variable
     return img_
     
@@ -201,7 +200,7 @@ class YOLO(nn.Module):
         self.learning_rate=0.001
         self.mod_count = 0
         # intial convolutions
-        self.features = nn.ModuleList().to('cuda')
+        self.features = nn.ModuleList()
         block = nn.Sequential()
         block.add_module('conv_0', nn.Conv2d(3, 32, 3, stride=1, padding=1, bias=False))
         block.add_module('batch_norm_0', nn.BatchNorm2d(32))
@@ -300,10 +299,3 @@ class YOLO(nn.Module):
             outputs[i] = x
 
         return detections
-
-print('Using GPU' if torch.cuda.is_available() else 'Using CPU')
-
-net = YOLO().to('cuda' if torch.cuda.is_available() else 'cpu')
-inp = get_test_input()
-pred = net(inp, torch.cuda.is_available())
-print(pred.shape)
