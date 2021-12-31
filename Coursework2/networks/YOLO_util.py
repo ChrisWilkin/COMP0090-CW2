@@ -2,10 +2,6 @@
 
 from os import write
 import torch
-import sys
-import os
-sys.path.append(os.path.dirname(__file__)[:-len('/networks')]) #Import other folders after this line
-import YOLO as Y
 
 def calc_iou(box1, box2):
     """

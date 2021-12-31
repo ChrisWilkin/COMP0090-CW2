@@ -109,13 +109,17 @@ def load_custom_dataset(key, dataset, indices=None):
         grp = file[key]
         subgrp = grp[dataset]
         if indices is not None:
-            labels = subgrp.get(datasets[dataset])[indices].astype(np.uint8).copy()
-            ids = subgrp.get('ID')[indices].copy()
+            labels = np.array(subgrp.get(datasets[dataset])[indices])#.astype(np.uint8)
+            ids = np.array(subgrp.get('ID')[indices])
         else:
-            labels = subgrp.get(datasets[dataset]).astype(np.uint8).copy()
-            ids = subgrp.get('ID').copy()
+            labels = np.array(subgrp.get(datasets[dataset])[:])##.astype(np.uint8)
+            ids = np.array(subgrp.get('ID')[:])
+        l = labels.copy()
+        i = ids.copy()
+        del labels
+        del ids
     
-    return labels, ids
+    return l, i
 
 def summarise_h5_structure(path):
     f = h5.File(path, 'r')
