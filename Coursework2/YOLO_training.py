@@ -36,7 +36,7 @@ def loss(x, tx):
 for p in predictions:
     l = loss(p[1:5], bbs[0])
     l.backward()
-    
+
 
 
     
