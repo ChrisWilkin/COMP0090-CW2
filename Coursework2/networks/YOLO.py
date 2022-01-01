@@ -146,6 +146,7 @@ def prediction_transforms(pred, inp, anchors, classes, gpu=False):
     Prediction transformation taken from 
     https://blog.paperspace.com/how-to-implement-a-yolo-v3-object-detector-from-scratch-in-pytorch-part-3/
     '''
+
     batch = pred.size(0)
     stride = inp // pred.size(2)
     grids = inp // stride
@@ -256,6 +257,7 @@ class YOLO(nn.Module):
             #print(i, x.shape, type(mod))
             if isinstance(mod, nn.Sequential):
                 x = self.features[i](x)
+                
 
             elif isinstance(mod, nn.Upsample):
                 x = mod(x)
@@ -286,7 +288,8 @@ class YOLO(nn.Module):
                 inp = 256
                 classes = 2
                 x = x.data
-                x = prediction_transforms(x, inp, anchors, classes, gpu)
+                x = torch.tensor(prediction_transforms(x, inp, anchors, classes, gpu), requires_grad=True)
+                
                 if not write:
                     detections = x
                     write = 1
@@ -295,7 +298,7 @@ class YOLO(nn.Module):
 
             else:
                 print('Unknown module!!!')
-            
+           
             outputs[i] = x
-
+      
         return detections
