@@ -40,7 +40,6 @@ for i, data in enumerate(dataloader):
     if i == 10:
         imgs = images[0]
         msks = output[0]
-    print(i)
 
 print(np.average(losses))
 
