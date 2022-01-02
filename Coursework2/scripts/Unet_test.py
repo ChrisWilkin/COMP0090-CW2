@@ -24,7 +24,7 @@ loss_func = torch.nn.CrossEntropyLoss()
 
 losses = []
 imgs, msks = [], []
-
+net.eval()
 
 for i, data in enumerate(dataloader):
     images, masks, bins, bbox = data.values()
@@ -37,14 +37,20 @@ for i, data in enumerate(dataloader):
     new_masks = masks.view(masks.size()[0],masks.size()[2],masks.size()[3]).long()
     loss = loss_func(output, new_masks)
     losses.append(loss.item())
-
-    imgs.append(images[0])
-    msks.append(output[0])
+    if i == 10:
+        imgs = images[0]
+        msks = output[0]
+    print(i)
 
 print(np.average(losses))
 
+msks = msks.detach().cpu()
 
-DataUtils.visualise_masks(imgs[0], msks[0])
+mask = np.argmax(msks, 0)
+image = imgs.detach().cpu()
+print(image.shape)
+
+DataUtils.visualise_masks(image, mask)
 
 
 

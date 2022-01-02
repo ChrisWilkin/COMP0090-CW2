@@ -138,9 +138,12 @@ def summarise_h5_structure(path):
 
 def visualise_masks(img, msk):
     fig, ax = plt.subplots()
-    msk = msk.permute(1,2,0).numpy()
+    img =  img.permute(1,2,0).numpy()/255
+    msk = msk.permute(0,1).numpy()
+    msk = np.repeat(msk[:,:,None], 3, axis=2)
+    print(msk.shape)
     msk = np.ones(msk.shape)-msk
-    img = img - msk
+    img = img * (1 - msk)
             
     ax.imshow(img)
 
