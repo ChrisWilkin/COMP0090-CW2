@@ -4,6 +4,7 @@ import os
 import numpy as np
 from numpy.lib.npyio import save
 from numpy.testing._private.utils import print_assert_equal
+import matplotlib.pyplot as plt
 
 
 PATH = f'{os.path.dirname(__file__)[:-14]}/Datasets'
@@ -134,4 +135,17 @@ def summarise_h5_structure(path):
 
     loop(f)
     return
+
+def visualise_masks(img, msk):
+    fig, ax = plt.subplots()
+    msk = msk.permute(1,2,0).numpy()
+    msk = np.ones(msk.shape)-msk
+    img = img - msk
+            
+    ax.imshow(img)
+
+    
+    # remove one of these
+    fig.show()
+    plt.show()
 
