@@ -21,6 +21,13 @@ Commands:
 10. git merge <branch> - merges the specified branch with the main branch. PLEASE CHECK WITH EVERYONE ELSE IN THE TEAM BEFORE DOING THIS!!!
 11. git - provides a list of all commands and their functions
 12. git status - gives a summary of the current index (what files have been changed /waiting to commit etc.)
+
+Weight Naming Convention:
+<Network Name><Param1><Param1 Value><Param2><Param2 Value>...<><lr><learning rate value(after 0.)>ep<epoch numbers><version number>.pt
+eg. for Unet with k=12, lr=0.001, 10 epochs and third version:
+        Unetk12lr001ep10v3.pt
+    for YOLO with lr=0.001, 20 epochs and first version:
+        YOLOlr001ep20v1.pt
   
 
 
