@@ -17,8 +17,11 @@ import networks.U_net as Unet
 dataset = DatasetClass.PetSegmentationDataSet('train','bin','mask',"bbox")
 dataloader = DataLoader(dataset, batch_size=10, shuffle=True, num_workers=0)
 
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print(device)
+
 #set k=12 for this network to run slightly faster
-net = Unet.Unet(k=4)
+net = Unet.Unet(k=4).to(device)
 net = net.double()
 #print(net)
 
@@ -33,7 +36,7 @@ print("Training started")
 training_start_time = time.time()
 
 # train for 10 epochs
-epochs = 10
+epochs = 8
 for epoch in range(epochs):  
     # time training and keep track of loss
     epoch_training_start_time = time.time()
@@ -41,7 +44,10 @@ for epoch in range(epochs):
 
     for i, data in enumerate(dataloader):
         images, masks, bins, bbox = data.values()
-    
+        images =  images.to(device)
+        masks = masks.to(device)
+        bins = bins.to(device)
+        bbox = bbox.to(device)
         optimizer.zero_grad()
         output = net(images)
         new_masks = masks.view(masks.size()[0],masks.size()[2],masks.size()[3]).long()
@@ -65,3 +71,4 @@ for epoch in range(epochs):
 
 print('Training done.')
 print('Total training time = {:.2f}s'.format( time.time()-training_start_time))
+torch.save(net.state_dict(), os.path.dirname(__file__)+'/networks/Weights/Unetk12lr001ep8v1.pt')
