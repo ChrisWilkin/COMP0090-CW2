@@ -1,3 +1,5 @@
+from __future__ import division
+
 import torch 
 import torch.nn as nn
 import torch.nn.functional as F 
@@ -7,6 +9,7 @@ import cv2
 import sys
 import os
 sys.path.append(os.path.dirname(__file__)[:-len('/YoloTest')]) #Import other folders after this line
+import YoloTest.YOLO_thresh as utils
 
 class EmptyLayer(nn.Module):
     def __init__(self):
@@ -150,7 +153,7 @@ def create_modules(blocks):
     return (net_info, module_list)
 
 
-def predict_transform(prediction, inp_dim, anchors, num_classes, CUDA = True):
+def predict_transform(prediction, inp_dim, anchors, num_classes, CUDA = False):
     batch_size = prediction.size(0)
     stride =  inp_dim // prediction.size(2)
     grid_size = inp_dim // stride
@@ -274,4 +277,5 @@ def get_test_input():
 model = Darknet("YoloTest/YOLO_config.txt")
 inp = get_test_input()
 pred = model(inp, False)
-print (pred)
+pred = utils.write_results(pred, 0.5, 2)
+print(pred[0:2])
