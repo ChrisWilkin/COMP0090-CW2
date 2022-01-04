@@ -6,7 +6,7 @@ import networks.YOLO as network
 import networks.YOLO_util as util
 import sys
 import os
-sys.path.append(os.path.dirname(__file__)[:-len('/scripts')]) #Import other folders after this line
+sys.path.append(os.path.dirname(__file__)[:-len('/scripts')])
 import data_pipeline.DataUtils as data_util
 
 net = network.YOLO()
