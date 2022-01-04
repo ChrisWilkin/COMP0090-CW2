@@ -5,7 +5,7 @@ from torch.utils.data import Dataset, DataLoader
 import time
 import sys
 import os
-sys.path.insert(1, '..') # add folder above to path for easy import 
+sys.path.append('..') # add folder above to path for easy import 
 import data_pipeline.DataUtils as DataUtils
 import data_pipeline.DatasetClass as DatasetClass
 from networks.Half_U_net import *
@@ -46,6 +46,7 @@ for epoch in range(EPOCHS):
         ims = list(image for image in ims)
         labels = labels.to(device)
         boxes = boxes.to(device)
+        ims = ims.to(device)
         targets = [{'boxes': boxes[i].reshape((1,4)), 'labels': labels[i].reshape(1)} for i in range(len(labels))]
 
         try:
@@ -70,4 +71,4 @@ for epoch in range(EPOCHS):
             #    print(boxes[0])
             lr_scheduler.step()
         
-torch.save(net.state_dict(), 'rcnn.pt')
+torch.save(net.state_dict(), os.path.dirname(__file__)+'/networks/Weights/RCNNk4lr01ep1v1.pt')
