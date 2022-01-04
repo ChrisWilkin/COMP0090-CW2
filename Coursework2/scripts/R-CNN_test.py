@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 
-dataset = DatasetClass.PetSegmentationDataSet('test')
+dataset = DatasetClass.PetSegmentationDataSet('test', 'bbox')
 dataloader = DataLoader(dataset, batch_size=3, shuffle=True, num_workers=0)
 del dataset
 
@@ -46,7 +46,8 @@ CLASSES = ['Cat', 'Dog']
 
 for j, ims in enumerate(dataloader):
     if j == 0:
-        for i , orig_image in enumerate(ims['images']):
+        for i , data in enumerate(ims):
+            orig_image, boxes = data.values()
             image_name = f'Image {i}'
             image = orig_image
             image /= 255
@@ -70,6 +71,7 @@ for j, ims in enumerate(dataloader):
             # draw the bounding boxes and write the class name on top of it
             for k, box in enumerate(draw_boxes):
                 print(box, pred_classes[k], scores[k], i)
+                print(boxes)
                 cv2.rectangle(orig_image,
                             (int(box[0]), int(box[1])),
                             (int(box[2]), int(box[3])),
@@ -78,9 +80,9 @@ for j, ims in enumerate(dataloader):
                             (int(box[0]), int(box[1]-5)),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 
                             2, lineType=cv2.LINE_AA)
-            cv2.imshow('Prediction', orig_image)
-            cv2.waitKey(10)
-            cv2.imwrite(f"../test_predictions/{image_name}.jpg", orig_image,)
+            #cv2.imshow('Prediction', orig_image)
+            #cv2.waitKey(10)
+            #cv2.imwrite(f"../test_predictions/{image_name}.jpg", orig_image,)
         print(f"Image {i+1} done...")
         print('-'*50)
 
