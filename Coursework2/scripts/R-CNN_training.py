@@ -51,7 +51,7 @@ losses = []
 net.train()
 
 for epoch in range(EPOCHS):
-    print('/nEPOCH ', epoch)
+    print('\nEPOCH ', epoch)
     t = time.time()
     for i, data in enumerate(dataloader):
         ims, labels, boxes = data.values()
