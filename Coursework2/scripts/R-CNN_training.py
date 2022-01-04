@@ -38,7 +38,7 @@ anchor_generator = AnchorGenerator(sizes=((32, 64, 128, 256, 512),), aspect_rati
 roi_pooler = torchvision.ops.MultiScaleRoIAlign(featmap_names=['0'], output_size=7, sampling_ratio=2)
 net = FasterRCNN(backbone, num_classes=2, rpn_anchor_generator=anchor_generator, box_roi_pool=roi_pooler).to(device)
 net = net.double()
-torch.save(net.state_dict(), os.path.dirname(__file__)[:-len('/scripts')]+'/networks/Weights/RCNNk4lr01ep1v1.pt')
+#torch.save(net.state_dict(), os.path.dirname(__file__)[:-len('/scripts')]+'/networks/Weights/RCNNk4lr01ep1v1.pt')
 
 criterion = optim.SGD(net.parameters(), LR, MOM) # optimizer
 #loss = torch.nn.MSELoss()
