@@ -14,10 +14,10 @@ import data_pipeline.DatasetClass as DatasetClass
 from networks.Half_U_net import Half_Unet
 
 
-BATCH = 2
-LR = 0.05
+BATCH = 4
+LR = 0.01
 MOM = 0.9
-EPOCHS = 40
+EPOCHS = 1
 k = 4
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
