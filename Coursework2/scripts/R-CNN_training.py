@@ -14,7 +14,7 @@ import data_pipeline.DatasetClass as DatasetClass
 from networks.Half_U_net import Half_Unet
 
 
-BATCH = 4
+BATCH = 3
 LR = 0.01
 MOM = 0.9
 EPOCHS = 1
