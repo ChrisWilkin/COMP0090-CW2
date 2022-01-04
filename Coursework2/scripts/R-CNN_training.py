@@ -13,7 +13,7 @@ from networks.Half_U_net import *
 BATCH = 16
 LR = 0.01
 MOM = 0.9
-EPOCHS = 1
+EPOCHS = 40
 k = 4
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -70,4 +70,4 @@ for epoch in range(EPOCHS):
             #    print(boxes[0])
             lr_scheduler.step()
         
-torch.save(net.state_dict(), 'rcnn.pt')
+torch.save(net.state_dict(), 'rcnn_40epochs.pt')
