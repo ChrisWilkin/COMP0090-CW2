@@ -13,7 +13,7 @@ sys.path.insert(1, '..')
 import data_pipeline.DatasetClass as DatasetClass
 from networks.Half_U_net import Half_Unet
 
-BATCH = 1
+BATCH = 2
 LR = 0.05
 MOM = 0.9
 EPOCHS = 40
