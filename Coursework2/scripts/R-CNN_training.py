@@ -28,8 +28,6 @@ sub = Subset(data, range(0, 100))
 dataloader = DataLoader(sub, BATCH, shuffle=True)
 del data
 
-print('batches = ', BATCH)
-
 #backbone = Half_Unet(k).to(device)
 #backbone.out_channels = k*4
 
@@ -88,4 +86,4 @@ for epoch in range(EPOCHS):
                 print(f'25 Batches: {time.time() - t:.2f}s')
                 t = time.time()
         
-torch.save(net.state_dict(), 'rcnn_40epochs.pt')
+torch.save(net.state_dict(), 'rcnn_v2.pt')
