@@ -44,10 +44,9 @@ detection_threshold = 0.35
 CLASSES = ['Cat', 'Dog']
 
 
-for j, ims in enumerate(dataloader):
+for j, data in enumerate(dataloader):
     if j == 0:
-        for i , data in enumerate(ims):
-            orig_image, boxes = data.values()
+        for i, orig_image, boxes in enumerate(data.values()):
             image_name = f'Image {i}'
             image = orig_image
             image /= 255
