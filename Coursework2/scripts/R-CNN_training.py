@@ -5,7 +5,7 @@ from torch.utils.data import Dataset, DataLoader
 import time
 import sys
 import os
-sys.path.append('..') # add folder above to path for easy import 
+sys.path.append(os.path.dirname(__file__)[:-len('/scripts')])
 import data_pipeline.DataUtils as DataUtils
 import data_pipeline.DatasetClass as DatasetClass
 from networks.Half_U_net import *

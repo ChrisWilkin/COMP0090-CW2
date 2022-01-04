@@ -7,8 +7,7 @@ from torch.nn.modules.batchnorm import BatchNorm2d
 from torch.nn.modules.conv import Conv2d
 import sys
 import os
-sys.path.insert(1, '..') # add folder above to path for easy import 
-
+sys.path.append(os.path.dirname(__file__)[:-len('/networks')])
 
 
 # higher level than tensor flow
