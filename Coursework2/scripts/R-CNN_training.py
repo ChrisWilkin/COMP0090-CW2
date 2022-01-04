@@ -49,6 +49,8 @@ lr_scheduler = torch.optim.lr_scheduler.StepLR(criterion, step_size=3, gamma=0.1
 
 losses = []
 
+net.train()
+
 for epoch in range(EPOCHS):
     t = time.time()
     for i, data in enumerate(dataloader):
