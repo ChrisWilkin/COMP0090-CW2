@@ -14,7 +14,7 @@ import numpy as np
 import cv2
 
 dataset = DatasetClass.PetSegmentationDataSet('test')
-dataloader = DataLoader(dataset, batch_size=10, shuffle=True, num_workers=0)
+dataloader = DataLoader(dataset, batch_size=3, shuffle=True, num_workers=0)
 del dataset
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -22,8 +22,8 @@ print('Using ', device)
 
 k=4
 
-backbone = Half_Unet(k).to(device)
-backbone.out_channels = k*4
+backbone = torchvision.models.mobilenet_v2(pretrained=True).features
+backbone.out_channels = 1280
 # anchor generator
 anchor_generator = AnchorGenerator(sizes=((32, 64, 128, 256, 512),), aspect_ratios=((0.5, 1.0, 2.0),))
 # feature maps for ROI cropping and ROI sizes 
@@ -31,7 +31,7 @@ roi_pooler = torchvision.ops.MultiScaleRoIAlign(featmap_names=['0'], output_size
 net = FasterRCNN(backbone, num_classes=2, rpn_anchor_generator=anchor_generator, box_roi_pool=roi_pooler).to(device)
 net = net.double()
 
-net.load_state_dict(torch.load(os.path.dirname(__file__)[:-len('/scripts')]+'/networks/Weights/RCNNk4lr01ep5v1.pt', map_location=device))
+net.load_state_dict(torch.load('rcnn_40epochs.pt', map_location=device))
 
 net.eval()
 
@@ -84,6 +84,4 @@ for j, ims in enumerate(dataloader):
         print(f"Image {i+1} done...")
         print('-'*50)
 
-plt.figure(1)
-plt.subplot(111)
-plt.plot(losses)
+
