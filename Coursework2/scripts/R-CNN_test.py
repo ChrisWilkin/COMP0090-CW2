@@ -39,7 +39,7 @@ losses = []
 
 selection = np.random.randint(0, len(dataloader))
 
-detection_threshold = 0.35
+detection_threshold = 0
 
 CLASSES = ['Cat', 'Dog']
 
