@@ -49,7 +49,8 @@ for j, data in enumerate(dataloader):
         ims, boxes = data.values()
         print(ims.shape, boxes.shape)
         for i, b in enumerate(zip(ims, boxes)):
-            print(b)
+            orig_image = b[0]
+            boxes = b[1]
             image_name = f'Image {i}'
             image = orig_image
             image /= 255
