@@ -6,6 +6,7 @@ from torchvision.models.detection.rpn import AnchorGenerator
 import sys
 import os
 sys.path.append(os.path.dirname(__file__)[:-len('/scripts')])
+sys.path.insert(1, '..') 
 import data_pipeline.DataUtils as DataUtils
 import data_pipeline.DatasetClass as DatasetClass
 from networks.Half_U_net import Half_Unet
