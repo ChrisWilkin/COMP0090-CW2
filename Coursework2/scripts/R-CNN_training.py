@@ -28,6 +28,7 @@ sub = Subset(data, range(0, 100))
 dataloader = DataLoader(sub, BATCH, shuffle=True)
 del data
 
+print('batches = ', BATCH)
 
 #backbone = Half_Unet(k).to(device)
 #backbone.out_channels = k*4
