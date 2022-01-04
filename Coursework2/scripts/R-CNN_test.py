@@ -46,7 +46,8 @@ CLASSES = ['Cat', 'Dog']
 
 for j, data in enumerate(dataloader):
     if j == 0:
-        for i, orig_image, boxes in enumerate(data.values()):
+        ims, boxes = data.values()
+        for i, orig_image, boxes in enumerate(zip(ims, boxes)):
             image_name = f'Image {i}'
             image = orig_image
             image /= 255
