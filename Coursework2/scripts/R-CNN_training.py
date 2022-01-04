@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, Subset
 import torchvision 
 from torchvision.models.detection import FasterRCNN
 from torchvision.models.detection.rpn import AnchorGenerator
@@ -13,6 +13,7 @@ sys.path.insert(1, '..')
 import data_pipeline.DatasetClass as DatasetClass
 from networks.Half_U_net import Half_Unet
 
+
 BATCH = 2
 LR = 0.05
 MOM = 0.9
@@ -23,7 +24,8 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print('Using ', device)
 
 data = DatasetClass.PetSegmentationDataSet('train', 'bbox', 'bin')
-dataloader = DataLoader(data, BATCH, shuffle=True)
+sub = Subset(data, range(0, 100))
+dataloader = DataLoader(sub, BATCH, shuffle=True)
 del data
 
 
