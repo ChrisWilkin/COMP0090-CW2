@@ -74,8 +74,8 @@ for j, data in enumerate(dataloader):
             
             # draw the bounding boxes and write the class name on top of it
             for k, box in enumerate(draw_boxes):
-                print(box, pred_classes[k], scores[k], i)
-                print(boxes_true)
+                print('prediction: ', box, pred_classes[k], scores[k], i)
+                print('ground truth:', boxes_true)
                 cv2.rectangle(orig_image,
                             (int(box[0]), int(box[1])),
                             (int(box[2]), int(box[3])),
