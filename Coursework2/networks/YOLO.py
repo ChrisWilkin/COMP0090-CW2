@@ -6,7 +6,7 @@ import os
 import numpy as np
 from PIL import Image
 
-sys.path.append(os.path.dirname(__file__)[:-len('/networks')]) #Import other folders after this line
+sys.path.insert(1, '..') # add folder above to path for easy import 
 
 def get_test_input():
     img = Image.open("dog-cycle-car.png", 'r')

@@ -7,7 +7,7 @@ from torch.nn.modules.batchnorm import BatchNorm2d
 from torch.nn.modules.conv import Conv2d
 import sys
 import os
-sys.path.append(os.path.dirname(__file__)[:-len('/networks')]) #Import other folders after this line
+sys.path.insert(1, '..') # add folder above to path for easy import 
 
 
 

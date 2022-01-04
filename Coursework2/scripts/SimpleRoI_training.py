@@ -5,7 +5,7 @@ from torch.utils.data import Dataset, DataLoader
 import time
 import sys
 import os
-sys.path.append(os.path.dirname(__file__)[:-len('/scripts')]) #Import other folders after this line
+sys.path.insert(1, '..') # add folder above to path for easy import 
 import data_pipeline.DataUtils as DataUtils
 import data_pipeline.DatasetClass as DatasetClass
 from networks.SimpleRoI import SimpleRoI
