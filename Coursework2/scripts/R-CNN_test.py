@@ -50,7 +50,7 @@ for j, data in enumerate(dataloader):
         print(ims.shape, boxes.shape)
         for i, b in enumerate(zip(ims, boxes)):
             orig_image = b[0]
-            boxes = b[1]
+            boxes_true = b[1]
             image_name = f'Image {i}'
             image = orig_image
             image /= 255
@@ -74,7 +74,7 @@ for j, data in enumerate(dataloader):
             # draw the bounding boxes and write the class name on top of it
             for k, box in enumerate(draw_boxes):
                 print(box, pred_classes[k], scores[k], i)
-                print(boxes)
+                print(boxes_true)
                 cv2.rectangle(orig_image,
                             (int(box[0]), int(box[1])),
                             (int(box[2]), int(box[3])),
