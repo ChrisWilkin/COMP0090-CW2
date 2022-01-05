@@ -99,6 +99,11 @@ class Unet(nn.Module):
                                            ,AvgPool2d((8, 8),stride = 4) # 16 x 16 x 32
                                            ,Linear(k, 2)) # performing binary classification
 
+        self.ROI = nn.Sequential(BatchNorm2d(k)
+                                           ,Conv2d(k, k, kernel_size=7, stride=4, padding=3) # now 64 x 64 x 32
+                                           ,AvgPool2d((8, 8),stride = 4) # 16 x 16 x 32
+                                           ,Linear(k, 4)) # performing ROI, 2 x (x,y) coordinates
+
 
     def forward(self, x):
         x = x.double()
@@ -129,4 +134,6 @@ class Unet(nn.Module):
 
         binary_classification = self.binary_classification(torch.cat([upconv3, out1], 1))
 
-        return out7, binary_classification
+        ROI = self.ROI(torch.cat([upconv3, out1], 1))
+
+        return out7, binary_classification, ROI
