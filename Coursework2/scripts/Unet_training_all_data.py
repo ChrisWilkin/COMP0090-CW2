@@ -43,6 +43,10 @@ for epoch in range(epochs):
     epoch_training_start_time = time.time()
     total_loss = 0.0
 
+    #segmentation accuracy
+    total_pixels = 0
+    correct_pixels = 0
+
     for i, data in enumerate(dataloader):
         images, images_ID, masks, masks_ID = data.values()
         images =  images.to(device)
@@ -56,7 +60,10 @@ for epoch in range(epochs):
 
         total_loss += loss.item()
 
-        total_loss += loss.item()
+        # segmentation accuracy
+        _, predicted = torch.max(output.data, 1)
+        total_pixels += new_masks.nelement() # number of pixels in mask
+        correct_pixels += predicted.eq(new_masks.data).sum().item() # number of pixels correctly predicted
 
         # print out average loss for epoch
         if i % 50 == 49:    # print every 50 mini-batches
@@ -64,6 +71,10 @@ for epoch in range(epochs):
                   (epoch + 1, i + 1, total_loss / 50))
             total_loss = 0.0
     print('Time to train epoch = {:.2f}s'.format( time.time()-epoch_training_start_time))
+
+    # print segmentation accuracy
+    train_accuracy = (correct_pixels/total_pixels)*100
+    print(f'Segmentation accuracy: {train_accuracy}')
 
 
 
