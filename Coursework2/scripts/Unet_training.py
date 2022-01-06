@@ -76,8 +76,8 @@ for epoch in range(epochs):
                   (epoch + 1, i + 1, total_loss / 50))
             total_loss = 0.0
 
-        # print segmentation loss
-        print(f'Segmentation loss: {train_accuracy}')
+        # print segmentation accuracy
+        print(f'Segmentation accuracy: {train_accuracy}')
         
     print('Time to train epoch = {:.2f}s'.format( time.time()-epoch_training_start_time))
 
