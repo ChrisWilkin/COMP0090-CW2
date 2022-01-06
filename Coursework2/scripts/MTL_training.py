@@ -10,8 +10,8 @@ import time
 import sys
 import os
 
-#sys.path.insert(1, '..') # add folder above to path for easy import 
-sys.path.append(os.path.dirname(__file__)[:-len('/scripts')])
+sys.path.insert(1, '..') # add folder above to path for easy import 
+#sys.path.append(os.path.dirname(__file__)[:-len('/scripts')])
 import data_pipeline.DataUtils as DataUtils
 import data_pipeline.DatasetClass as DatasetClass
 import networks.U_net_classification as MTL
@@ -28,7 +28,6 @@ print(device)
 net = MTL.Unet(k=4).to(device)
 net = net.double()
 #print(net)
-
 
 ## loss and optimiser
 loss_func = torch.nn.CrossEntropyLoss()
@@ -48,46 +47,46 @@ for epoch in range(epochs):
     total_loss = 0.0
     first_loss = []
     for i, data in enumerate(dataloader):
+        print(i)
         images, images_ID, masks, masks_ID, bins, bins_ID = data.values()
         images =  images.to(device)
         masks = masks.to(device)
         bins = bins[:,0].to(device)
         
-        
-        if i == 0:
-            segmentation, classification = net(images)
-            first_loss.append(loss_func(segmentation, masks.long()))
-            first_loss.append(loss_func(classification, bins.long()))
-            continue
-        
-        
         optimizer.zero_grad()
         segmentation, classification = net(images)
-        seg_loss = loss_func(segmentation, masks.long())
-        cls_loss = loss_func(classification,bins.long())
         
-        print("seg_loss",seg_loss)
-        print("cls_loss",cls_loss)
+        if i == 0:
+            seg_loss = loss_func(segmentation, masks.long())
+            cls_loss = loss_func(classification,bins.long())
+            first_loss.append(seg_loss.item())
+            first_loss.append(cls_loss.item())
+            #print("seg_loss",seg_loss)
+            #print("cls_loss",cls_loss)
         
-        seg_loss = seg_loss*((seg_loss/first_loss[0])**alpha)
-        cls_loss = cls_loss*((cls_loss/first_loss[1])**alpha)
-        print("seg_loss",seg_loss)
-        print("cls_loss",cls_loss)
-        loss = seg_loss + cls_loss
-        loss.backward()
-        optimizer.step()
-
-        total_loss += loss.item()
-
-        total_loss += loss.item()
+        
+        
+        else:
+            seg_loss = loss_func(segmentation, masks.long())
+            cls_loss = loss_func(classification,bins.long())
+            #print("seg_loss",seg_loss)
+            #print("cls_loss",cls_loss)
+        
+            seg_loss = seg_loss*((seg_loss/first_loss[0])**alpha)
+            cls_loss = cls_loss*((cls_loss/first_loss[1])**alpha)
+            #print("seg_loss",seg_loss)
+            #print("cls_loss",cls_loss)
+            loss = seg_loss + cls_loss
+            loss.backward()
+            optimizer.step()
+            
+            total_loss += loss.item()
 
         # print out average loss for epoch
         if i % 50 == 49:    # print every 50 mini-batches
             print('[%d, %5d] loss: %.3f' %
                   (epoch + 1, i + 1, total_loss / 50))
             total_loss = 0.0
-            
-    
     print('Time to train epoch = {:.2f}s'.format( time.time()-epoch_training_start_time))
 
 
