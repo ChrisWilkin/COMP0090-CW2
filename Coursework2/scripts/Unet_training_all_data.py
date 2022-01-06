@@ -17,6 +17,8 @@ import networks.U_net as Unet
 # read in Yipeng's training data
 dataset = DatasetClass.CompletePetDataSet('CompleteDataset/AllData.h5','train','masks')
 dataloader = DataLoader(dataset, batch_size=10, shuffle=True, num_workers=0)
+valset = DatasetClass.CompletePetDataSet('CompleteDataset/AllData.h5','val','masks')
+valloader = DataLoader(valset, batch_size=10, shuffle=True, num_workers=0)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(device)
@@ -38,14 +40,13 @@ training_start_time = time.time()
 
 # train for 8 epochs
 epochs = 8
+losses = []
 for epoch in range(epochs):  
     # time training and keep track of loss
     epoch_training_start_time = time.time()
     total_loss = 0.0
 
-    #segmentation accuracy
-    total_pixels = 0
-    correct_pixels = 0
+    
 
     for i, data in enumerate(dataloader):
         images, images_ID, masks, masks_ID = data.values()
@@ -58,24 +59,41 @@ for epoch in range(epochs):
         loss.backward()
         optimizer.step()
 
+
         total_loss += loss.item()
-
-        # segmentation accuracy
-        _, predicted = torch.max(output.data, 1)
-        total_pixels += new_masks.nelement() # number of pixels in mask
-        correct_pixels += predicted.eq(new_masks.data).sum().item() # number of pixels correctly predicted
-
+        losses.append(loss.item())
         # print out average loss for epoch
         if i % 50 == 49:    # print every 50 mini-batches
             print('[%d, %5d] loss: %.3f' %
                   (epoch + 1, i + 1, total_loss / 50))
             total_loss = 0.0
     print('Time to train epoch = {:.2f}s'.format( time.time()-epoch_training_start_time))
+    
+    
+
+    # with out the gradient calculate testing accuracy after each epoch of training
+    #segmentation accuracy
+    total_pixels = 0
+    correct_pixels = 0
+    
+    with torch.no_grad():
+        for i, data in enumerate(valloader):
+            images, images_ID, masks, masks_ID = data.values()
+            images =  images.to(device)
+            masks = masks.to(device)
+
+            # calculate outputs by running images through the network
+            output = net(images)
+
+            # segmentation accuracy
+            _, predicted = torch.max(output.data, 1)
+            total_pixels += masks.nelement() # number of pixels in mask
+            correct_pixels += predicted.eq(masks.data).sum().item()
+    
 
     # print segmentation accuracy
     train_accuracy = (correct_pixels/total_pixels)*100
-    print(f'Segmentation accuracy: {train_accuracy}')
-
+    print(f'Segmentation accuracy at epoch {epoch}: {round(train_accuracy,2)}')
 
 
 print('Training done.')

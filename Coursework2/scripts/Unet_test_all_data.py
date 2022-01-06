@@ -18,25 +18,37 @@ print(device)
 
 net = Unet.Unet(k=4).to(device)
 net = net.double()
-net.load_state_dict(torch.load(os.path.dirname(__file__)[:-len('/scripts')]+'/networks/Weights/Unetk4lr001ep8v2.pt', map_location=device))
+#net.load_state_dict(torch.load(os.path.dirname(__file__)[:-len('/scripts')]+'/networks/Weights/Unetk4lr001ep8v2.pt', map_location=device))
 
 loss_func = torch.nn.CrossEntropyLoss()
 
 losses = []
 imgs, msks = [], []
 net.eval()
+total_pixels = 0
+correct_pixels = 0
+with torch.no_grad():
+    for i, data in enumerate(dataloader):
+        images, images_ID, masks, masks_ID = data.values()
+        images =  images.to(device)
+        masks = masks.to(device)
 
-for i, data in enumerate(dataloader):
-    images, images_ID, masks, masks_ID = data.values()
-    images =  images.to(device)
-    masks = masks.to(device)
-
-    output = net(images)
-    loss = loss_func(output, masks.long())
-    losses.append(loss.item())
-    if i == 10:
-        imgs = images[0]
-        msks = output[0]
+        output = net(images)
+        loss = loss_func(output, masks.long())
+        losses.append(loss.item())
+        
+        _, predicted = torch.max(output.data, 1)
+        total_pixels += masks.nelement() # number of pixels in mask
+        correct_pixels += predicted.eq(masks.data).sum().item()
+        if i == 10:
+            imgs = images[0]
+            msks = output[0]
+        
+test_accuracy = (correct_pixels/total_pixels)*100
+print(f'Segmentation accuracy on test set: {round(test_accuracy,2)}')       
+        
+            
+            
 
 print(np.average(losses))
 
