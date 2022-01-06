@@ -95,8 +95,9 @@ class Unet(nn.Module):
                                    Conv2d(k, n_segments, kernel_size=3, stride=1, padding=1))
 
         self.binary_classification = nn.Sequential(BatchNorm2d(2*k), ReLU(inplace=True)
-                                           ,Conv2d(2*k, k, kernel_size=7, stride=4, padding=3) # now 64 x 64 x 32 (256/4 = 64)
-                                           ,AvgPool2d((8, 8),stride = 4) # 16 x 16 x 32
+                                           ,Conv2d(2*k, k, kernel_size=5, stride=3, padding=2) # now 64 x 64 x 32 (256/4 = 64)
+                                            # add extra conv layer
+                                           ,AvgPool2d((4, 4),stride = 4) # 16 x 16 x 32
                                            ,nn.Flatten() #TODO: check if should be flattened from dimension 0 or 1 
                                            ,Linear(k*16*16, 2)) # performing binary classification
 
@@ -126,6 +127,8 @@ class Unet(nn.Module):
         upconv3 = self.upconv3(out6)
         # 7th and final block
         # concat input from 6th and 1st block
+        print(upconv3.size())
+        print(out1.size())
         out7 = self.conv7(torch.cat([upconv3, out1], 1))
 
         binary_classification = self.binary_classification(torch.cat([upconv3, out1], 1))
