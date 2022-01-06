@@ -26,6 +26,10 @@ losses = []
 imgs, msks = [], []
 net.eval()
 
+# segmentation accuracy
+total_pixels = 0
+correct_pixels = 0
+
 for i, data in enumerate(dataloader):
     images, masks, bins, bbox = data.values()
     images =  images.to(device)
@@ -41,7 +45,13 @@ for i, data in enumerate(dataloader):
         imgs = images[0]
         msks = output[0]
 
+    # segmentation accuracy
+    _, predicted = torch.max(output.data, 1)
+    total_pixels += new_masks.nelement()  # number of pixels in mask
+    correct_pixels += predicted.eq(new_masks.data).sum().item()  # number of pixels correctly predicted
+
 print(np.average(losses))
+print(f'Segmentation accuracy {100 * correct_pixels / total_pixels}')
 
 msks = msks.detach().cpu()
 
