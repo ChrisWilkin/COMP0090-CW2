@@ -80,19 +80,20 @@ def save_h5(ims, msks, bbs, bins, path):
     return
 
         
-def load_group_h5(path,group_name):
+def load_group_h5(fname,group_name,data_name):
     '''
     path: file path for h5 file
     group_name: train, test, val
-    ['bboxes', 'binary', 'images', 'masks']
+    ['bboxes', 'bins', 'images', 'masks']
     '''
+    path = paths(PATH, fname)
     with h5.File(path, 'r') as file:
-        bbox = file[group_name].get('bboxes')[:]
-        bin = file[group_name].get('binary')[:]
-        images = file[group_name].get('images')[:]
-        masks = file[group_name].get('masks')[:]
-
-    return bbox, bin, images, masks
+        group = file.get(group_name)
+        data = group.get(data_name).get(data_name)[:]
+        data_ID = group.get(data_name).get('ID')[:]
+        
+        
+    return data, data_ID
     
 def load_custom_dataset(key, dataset, indices=None):
     '''
