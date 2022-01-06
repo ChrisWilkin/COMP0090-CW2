@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.modules import module
-from torch.nn.modules.activation import ReLU
+from torch.nn.modules.activation import ReLU, Sigmoid
 from torch.nn.modules.batchnorm import BatchNorm2d
 from torch.nn.modules.conv import Conv2d
 from torch.nn.modules.linear import Linear
@@ -59,7 +59,7 @@ class Unet(nn.Module):
                                    Conv2d(4 * k, 8 * k, kernel_size=3, stride=1, padding=1),
                                    BatchNorm2d(8 * k), ReLU(inplace=True),
                                    Conv2d(8 * k, 8 * k, kernel_size=3, stride=1, padding=1))
-        self.upconv1 = nn.Sequential(nn.Upsample(scale_factor=(2, 2), mode='bilinear'),
+        self.upconv1 = nn.Sequential(nn.Upsample(scale_factor=(2, 2), mode='bilinear',align_corners=True),
                                      Conv2d(8 * k, 4 * k, kernel_size=3, stride=1, padding=1))
 
         # im size = 64 x 64
@@ -70,7 +70,7 @@ class Unet(nn.Module):
                                    Conv2d(8 * k, 4 * k, kernel_size=3, stride=1, padding=1),
                                    BatchNorm2d(4 * k), ReLU(inplace=True),
                                    Conv2d(4 * k, 4 * k, kernel_size=3, stride=1, padding=1))
-        self.upconv2 = nn.Sequential(nn.Upsample(scale_factor=(2, 2), mode='bilinear'),
+        self.upconv2 = nn.Sequential(nn.Upsample(scale_factor=(2, 2), mode='bilinear',align_corners=True),
                                      Conv2d(4 * k, 2 * k, kernel_size=3, stride=1, padding=1))
 
         # im size = 128 x 128
@@ -81,7 +81,7 @@ class Unet(nn.Module):
                                    Conv2d(4 * k, 2 * k, kernel_size=3, stride=1, padding=1),
                                    BatchNorm2d(2 * k), ReLU(inplace=True),
                                    Conv2d(2 * k, 2 * k, kernel_size=3, stride=1, padding=1))
-        self.upconv3 = nn.Sequential(nn.Upsample(scale_factor=(2, 2), mode='bilinear'),
+        self.upconv3 = nn.Sequential(nn.Upsample(scale_factor=(2, 2), mode='bilinear',align_corners=True),
                                      Conv2d(2 * k, k, kernel_size=3, stride=1, padding=1))
 
         # im size = 256 x 256
@@ -95,11 +95,12 @@ class Unet(nn.Module):
                                    Conv2d(k, n_segments, kernel_size=3, stride=1, padding=1))
 
         self.binary_classification = nn.Sequential(BatchNorm2d(2*k), ReLU(inplace=True)
-                                           ,Conv2d(2*k, k, kernel_size=5, stride=3, padding=2) # now 64 x 64 x 32 (256/4 = 64)
+                                           ,Conv2d(2*k, k, kernel_size=5, stride=4, padding=2) # now 64 x 64 x k (256/4 = 64)
                                             # add extra conv layer
-                                           ,AvgPool2d((4, 4),stride = 4) # 16 x 16 x 32
-                                           ,nn.Flatten() #TODO: check if should be flattened from dimension 0 or 1 
-                                           ,Linear(k*16*16, 2)) # performing binary classification
+                                           ,AvgPool2d((4, 4),stride = 4) # 16 x 16 x k (64/4 = 16)
+                                           ,nn.Flatten() 
+                                           ,Linear(k*16*16, 2)
+                                           ,Sigmoid()) # performing binary classification
 
 
     def forward(self, x):
@@ -129,8 +130,9 @@ class Unet(nn.Module):
         # concat input from 6th and 1st block
         print(upconv3.size())
         print(out1.size())
-        out7 = self.conv7(torch.cat([upconv3, out1], 1))
+        segmentation = self.conv7(torch.cat([upconv3, out1], 1))
 
+        #apply sigmoid to ensure output is between 0 and 1
         binary_classification = self.binary_classification(torch.cat([upconv3, out1], 1))
 
-        return out7, binary_classification
+        return segmentation, binary_classification
