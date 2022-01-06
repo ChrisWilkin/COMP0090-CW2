@@ -94,10 +94,11 @@ class Unet(nn.Module):
                                    # final prediction layer for segmentation
                                    Conv2d(k, n_segments, kernel_size=3, stride=1, padding=1))
 
-        self.binary_classification = nn.Sequential(BatchNorm2d(k)
-                                           ,Conv2d(k, k, kernel_size=7, stride=4, padding=3) # now 64 x 64 x 32
+        self.binary_classification = nn.Sequential(BatchNorm2d(2*k), ReLU(inplace=True)
+                                           ,Conv2d(2*k, k, kernel_size=7, stride=4, padding=3) # now 64 x 64 x 32 (256/4 = 64)
                                            ,AvgPool2d((8, 8),stride = 4) # 16 x 16 x 32
-                                           ,Linear(k, 2)) # performing binary classification
+                                           ,nn.Flatten() #TODO: check if should be flattened from dimension 0 or 1 
+                                           ,Linear(k*16*16, 2)) # performing binary classification
 
 
     def forward(self, x):
