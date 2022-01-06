@@ -8,7 +8,7 @@ sys.path.insert(1, '..') # add folder above to path for easy import
 import data_pipeline.DataUtils as DataUtils
 import data_pipeline.DatasetClass as DatasetClass
 from networks.Half_U_net import *
-from utils.engine import train_one_epoch
+from engine import train_one_epoch
 from utils.utils import *
 from torch.optim.lr_scheduler import StepLR
 
