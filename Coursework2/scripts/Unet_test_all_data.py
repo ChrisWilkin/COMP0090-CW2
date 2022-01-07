@@ -18,7 +18,7 @@ print(device)
 
 net = Unet.Unet(k=4).to(device)
 net = net.double()
-#net.load_state_dict(torch.load(os.path.dirname(__file__)[:-len('/scripts')]+'/networks/Weights/Unetk4lr001ep8v2.pt', map_location=device))
+net.load_state_dict(torch.load(os.path.dirname(__file__)[:-len('/scripts')]+'/networks/Weights/Unetk4lr001ep8v2.pt', map_location=device))
 
 loss_func = torch.nn.CrossEntropyLoss()
 

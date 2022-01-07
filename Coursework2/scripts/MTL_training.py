@@ -43,7 +43,7 @@ training_start_time = time.time()
 
 #alpha = 1
 # train for 8 epochs
-epochs = 2
+epochs = 8
 losses = []
 seg_accuracy = []
 cls_accuracy = []
@@ -53,7 +53,6 @@ for epoch in range(epochs):
     
     epoch_training_start_time = time.time()
     total_loss = 0.0
-
     for i, data in enumerate(dataloader):
         images, images_ID, masks, masks_ID, bins, bins_ID = data.values()
         images = images.to(device)
@@ -101,10 +100,10 @@ for epoch in range(epochs):
 
             # segmentation accuracy
             _, predicted_pixels = torch.max(segmentation.data, 1)
-            _, predicted_labels = torch.max(segmentation.data, 1)
+            _, predicted_labels = torch.max(classification.data, 1)
             
             total_pixels += masks.nelement()  # number of pixels in mask
-            correct_pixels += predicted.eq(masks.data).sum().item()
+            correct_pixels += predicted_pixels.eq(masks.data).sum().item()
             # count the number of correctly predicted images
             total_labels += bins.size(0)
             correct_labels += (predicted_labels == bins).sum().item()
@@ -112,11 +111,11 @@ for epoch in range(epochs):
     # print segmentation accuracy
     train_seg_accuracy = (correct_pixels / total_pixels) * 100
     seg_accuracy.append(train_seg_accuracy)
-    print(f'Segmentation accuracy at epoch {epoch}: {round(train_seg_accuracy, 2)}')
+    print(f'Segmentation accuracy at epoch {epoch+1}: {round(train_seg_accuracy, 2)}')
     
     train_cls_accuracy = (correct_labels / total_labels) * 100
     cls_accuracy.append(train_cls_accuracy)
-    print(f'Classification accuracy at epoch {epoch}: {round(train_cls_accuracy, 2)}')
+    print(f'Classification accuracy at epoch {epoch+1}: {round(train_cls_accuracy, 2)}')
 
 print('Training done.')
 print('Total training time = {:.2f}s'.format( time.time()-training_start_time))
