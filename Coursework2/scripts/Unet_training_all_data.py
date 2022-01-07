@@ -40,7 +40,7 @@ print("Training started")
 training_start_time = time.time()
 
 # train for 8 epochs
-epochs = 1
+epochs = 8
 losses = []
 accuracy = []
 for epoch in range(epochs):

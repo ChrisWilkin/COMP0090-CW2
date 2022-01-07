@@ -19,8 +19,6 @@ import networks.U_net_classification as MTL
 # read in Yipeng's training data
 dataset = DatasetClass.CompletePetDataSet('CompleteDataset/AllData.h5','train','masks','bins')
 dataloader = DataLoader(dataset, batch_size=10, shuffle=True, num_workers=0)
-valset = DatasetClass.CompletePetDataSet('CompleteDataset/AllData.h5', 'val', 'masks','bins')
-valloader = DataLoader(valset, batch_size=10, shuffle=True, num_workers=0)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(device)
@@ -31,7 +29,6 @@ net = MTL.Unet(k=4).to(device)
 net = net.double()
 #print(net)
 
-
 ## loss and optimiser
 loss_func = torch.nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
@@ -41,41 +38,49 @@ optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 print("Training started")
 training_start_time = time.time()
 
-#alpha = 1
+alpha = 1
 # train for 8 epochs
-epochs = 2
-losses = []
-seg_accuracy = []
-cls_accuracy = []
-
+epochs = 8
 for epoch in range(epochs):  
     # time training and keep track of loss
-    
     epoch_training_start_time = time.time()
     total_loss = 0.0
-
+    first_loss = []
     for i, data in enumerate(dataloader):
+        print(i)
         images, images_ID, masks, masks_ID, bins, bins_ID = data.values()
-        images = images.to(device)
+        images =  images.to(device)
         masks = masks.to(device)
         bins = bins[:,0].to(device)
         
         optimizer.zero_grad()
-        
         segmentation, classification = net(images)
         
-        seg_loss = loss_func(segmentation, masks.long())
-        cls_loss = loss_func(classification,bins.long())
-        #print("seg_loss",seg_loss)
-        #print("cls_loss",cls_loss)
-        loss = seg_loss + cls_loss
-        #print(loss)
-        loss.backward()
-
-        optimizer.step()
-
-        total_loss += loss.item()
-        losses.append(loss.item())
+        if i == 0:
+            seg_loss = loss_func(segmentation, masks.long())
+            cls_loss = loss_func(classification,bins.long())
+            first_loss.append(seg_loss.item())
+            first_loss.append(cls_loss.item())
+            #print("seg_loss",seg_loss)
+            #print("cls_loss",cls_loss)
+        
+        
+        
+        else:
+            seg_loss = loss_func(segmentation, masks.long())
+            cls_loss = loss_func(classification,bins.long())
+            #print("seg_loss",seg_loss)
+            #print("cls_loss",cls_loss)
+        
+            seg_loss = seg_loss*((seg_loss/first_loss[0])**alpha)
+            cls_loss = cls_loss*((cls_loss/first_loss[1])**alpha)
+            #print("seg_loss",seg_loss)
+            #print("cls_loss",cls_loss)
+            loss = seg_loss + cls_loss
+            loss.backward()
+            optimizer.step()
+            
+            total_loss += loss.item()
 
         # print out average loss for epoch
         if i % 50 == 49:    # print every 50 mini-batches
@@ -84,39 +89,7 @@ for epoch in range(epochs):
             total_loss = 0.0
     print('Time to train epoch = {:.2f}s'.format( time.time()-epoch_training_start_time))
 
-    total_pixels = 0
-    correct_pixels = 0
-    total_labels = 0
-    correct_labels = 0
 
-    with torch.no_grad():
-        for i, data in enumerate(valloader):
-            images, images_ID, masks, masks_ID, bins, bins_ID = data.values()
-            images = images.to(device)
-            masks = masks.to(device)
-            bins = bins[:,0].to(device)
-
-            # calculate outputs by running images through the network
-            segmentation, classification = net(images)
-
-            # segmentation accuracy
-            _, predicted_pixels = torch.max(segmentation.data, 1)
-            _, predicted_labels = torch.max(segmentation.data, 1)
-            
-            total_pixels += masks.nelement()  # number of pixels in mask
-            correct_pixels += predicted.eq(masks.data).sum().item()
-            # count the number of correctly predicted images
-            total_labels += bins.size(0)
-            correct_labels += (predicted_labels == bins).sum().item()
-
-    # print segmentation accuracy
-    train_seg_accuracy = (correct_pixels / total_pixels) * 100
-    seg_accuracy.append(train_seg_accuracy)
-    print(f'Segmentation accuracy at epoch {epoch}: {round(train_seg_accuracy, 2)}')
-    
-    train_cls_accuracy = (correct_labels / total_labels) * 100
-    cls_accuracy.append(train_cls_accuracy)
-    print(f'Classification accuracy at epoch {epoch}: {round(train_cls_accuracy, 2)}')
 
 print('Training done.')
 print('Total training time = {:.2f}s'.format( time.time()-training_start_time))
