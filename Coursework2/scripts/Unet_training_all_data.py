@@ -102,5 +102,5 @@ with open('u_net_losses.csv', 'w') as file:
     file.write('\n'.join(str(i) for i in losses))
 
 # saving accuracy at each epoch to csv file
-with open('u_net_accuracy.csv', 'w') as file:
+with open('u_net_training_accuracy.csv', 'w') as file:
     file.write('\n'.join(str(i) for i in accuracy ))
