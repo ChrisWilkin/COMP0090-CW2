@@ -36,7 +36,7 @@ roi_pooler = torchvision.ops.MultiScaleRoIAlign(featmap_names=['0'], output_size
 net = FasterRCNN(backbone, num_classes=2, rpn_anchor_generator=anchor_generator, box_roi_pool=roi_pooler).to(device)
 net = net.double()
 
-net.load_state_dict(torch.load('rcnn_v2.pt', map_location=device))
+net.load_state_dict(torch.load('rcnn_unet.pt', map_location=device))
 
 net.eval()
 
