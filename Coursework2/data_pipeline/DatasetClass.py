@@ -66,6 +66,7 @@ class PetSegmentationDataSet(Dataset):
             data['masks'] = mask
         if bin:
             bins = torch.from_numpy(DataUtils.load_data_from_h5(self.folder, 'binary.h5'))
+            bins = bins + 1 # classes are 1,2 instead of 0,1
             data['bins'] = bins
         if bbox:
             box = torch.from_numpy(DataUtils.load_data_from_h5(self.folder, 'bboxes.h5'))

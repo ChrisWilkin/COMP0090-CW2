@@ -24,15 +24,15 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print('Using ', device)
 
 data = DatasetClass.PetSegmentationDataSet('train', 'bbox', 'bin')
-sub = Subset(data, range(0, 100))
+sub = Subset(data, range(0, 200))
 dataloader = DataLoader(sub, BATCH, shuffle=True)
 del data
 
-#backbone = Half_Unet(k).to(device)
-#backbone.out_channels = k*4
+backbone = Half_Unet(k).to(device)
+backbone.out_channels = k*4
 
-backbone = torchvision.models.mobilenet_v2(pretrained=True).features
-backbone.out_channels = 1280
+#backbone = torchvision.models.mobilenet_v2(pretrained=True).features
+#backbone.out_channels = 1280
 # anchor generator
 anchor_generator = AnchorGenerator(sizes=((32, 64, 128, 256, 512),), aspect_ratios=((0.5, 1.0, 2.0),))
 # feature maps for ROI cropping and ROI sizes 
@@ -87,4 +87,4 @@ for epoch in range(EPOCHS):
                 print(f'25 Batches: {time.time() - t:.2f}s')
                 t = time.time()
         
-torch.save(net.state_dict(), 'rcnn_10epochs.pt')
+torch.save(net.state_dict(), 'rcnn_unet.pt')
