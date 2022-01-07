@@ -87,4 +87,4 @@ for epoch in range(EPOCHS):
                 print(f'25 Batches: {time.time() - t:.2f}s')
                 t = time.time()
         
-torch.save(net.state_dict(), 'rcnn_10epochs.pt')
+torch.save(net.state_dict(), 'rcnn_unet.pt')
