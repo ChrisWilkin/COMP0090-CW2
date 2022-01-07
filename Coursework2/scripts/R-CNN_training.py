@@ -14,10 +14,10 @@ import data_pipeline.DatasetClass as DatasetClass
 from networks.Half_U_net import Half_Unet
 
 
-BATCH = 2
-LR = 0.01
+BATCH = 8
+LR = 0.05
 MOM = 0.9
-EPOCHS = 10
+EPOCHS = 2
 k = 4
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -25,7 +25,7 @@ print('Using ', device)
 
 data = DatasetClass.PetSegmentationDataSet('train', 'bbox', 'bin')
 sub = Subset(data, range(0, 200))
-dataloader = DataLoader(sub, BATCH, shuffle=True)
+dataloader = DataLoader(data, BATCH, shuffle=True)
 del data
 
 backbone = Half_Unet(k).to(device)
@@ -44,7 +44,7 @@ net = net.double()
 criterion = optim.SGD(net.parameters(), LR, MOM) # optimizer
 #loss = torch.nn.MSELoss()
 
-lr_scheduler = torch.optim.lr_scheduler.StepLR(criterion, step_size=3, gamma=0.1) #learning rate scheduler
+lr_scheduler = torch.optim.lr_scheduler.StepLR(criterion, step_size=1, gamma=0.5) #learning rate scheduler
 
 losses = []
 
@@ -87,4 +87,11 @@ for epoch in range(EPOCHS):
                 print(f'25 Batches: {time.time() - t:.2f}s')
                 t = time.time()
         
-torch.save(net.state_dict(), 'rcnn_unet.pt')
+torch.save(net.state_dict(), 'RCNNk4lr1ep4v1.pt')
+
+# saving the loss at each epoch to csv file
+with open('RCNN_losses.csv', 'w') as file:
+    file.write('\n'.join(str(i) for i in losses))
+
+# saving accuracy at each epoch to csv file
+
