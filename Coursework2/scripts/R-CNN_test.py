@@ -33,7 +33,7 @@ backbone.out_channels = k*4
 anchor_generator = AnchorGenerator(sizes=((32, 64, 128, 256, 512),), aspect_ratios=((0.5, 1.0, 2.0),))
 # feature maps for ROI cropping and ROI sizes 
 roi_pooler = torchvision.ops.MultiScaleRoIAlign(featmap_names=['0'], output_size=7, sampling_ratio=2)
-net = FasterRCNN(backbone, num_classes=2, rpn_anchor_generator=anchor_generator, box_roi_pool=roi_pooler).to(device)
+net = FasterRCNN(backbone, num_classes=3, rpn_anchor_generator=anchor_generator, box_roi_pool=roi_pooler).to(device)
 net = net.double()
 
 net.load_state_dict(torch.load('rcnn_unet.pt', map_location=device))
