@@ -23,8 +23,12 @@ print('Using ', device)
 
 k=4
 
-backbone = torchvision.models.mobilenet_v2(pretrained=True).features
-backbone.out_channels = 1280
+backbone = Half_Unet(k).to(device)
+backbone.out_channels = k*4
+
+#backbone = torchvision.models.mobilenet_v2(pretrained=True).features
+#backbone.out_channels = 1280
+
 # anchor generator
 anchor_generator = AnchorGenerator(sizes=((32, 64, 128, 256, 512),), aspect_ratios=((0.5, 1.0, 2.0),))
 # feature maps for ROI cropping and ROI sizes 
@@ -44,7 +48,35 @@ detection_threshold = 0
 
 CLASSES = ['Cat', 'Dog']
 
+# new testing loop with updated classes
+for j, data in enumerate(dataloader):
+    if j % 50 == 0:
+        print('image ', j)
+        ims, orig_labels, orig_boxes = data.values()
+        #print('ims shape', ims.shape, 'boxes shape', boxes.shape)
+        ims = list(image for image in ims)
 
+        net.eval()
+        pred = net(ims)
+
+        pred = [{k: v.to('cpu') for k, v in t.items()} for t in pred]
+
+        if len(pred[0]['boxes']) != 0:
+            boxes = pred[0]['boxes'].data.numpy()
+            scores = pred[0]['scores'].data.numpy()
+            #print('boxes\n', boxes)
+            #print('scores\n', scores)
+            boxes = boxes[scores >= detection_threshold].astype(np.int32)
+          
+            print('predicted boxes\n', boxes)
+        else:
+            print('something went wrong... no predictions')
+
+        print('original boxes\n', orig_boxes)
+
+
+# uncomment below to run old testing loop instead
+"""
 for j, data in enumerate(dataloader):
     if j == 0:
         ims, boxes = data.values()
@@ -89,5 +121,5 @@ for j, data in enumerate(dataloader):
             #cv2.imwrite(f"../test_predictions/{image_name}.jpg", orig_image,)
         print(f"Image {i+1} done...")
         print('-'*50)
-
+"""
 
