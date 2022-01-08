@@ -145,24 +145,31 @@ class ROI():
                                 min_size=256, max_size=256).to(device)
         self.net = self.net.double()
 
-    def forward(self, images, targets: list):
-        assert 'boxes' in targets[0].keys()
-        assert 'labels' in targets[0].keys()
+    def forward(self, images, targets=None):
+        if targets is not None:
+            assert 'boxes' in targets[0].keys()
+            assert 'labels' in targets[0].keys()
 
-        return self.net(images, targets)
+            return self.net(images, targets)
+        else:
+            return self.net(images)
 
     def train(self):
         '''
-        Sets the model to train mode.
+        Sets the module in evaluation mode.
         '''
-        self.net.train()
+        self.net.train(True)
         return
     
     def eval(self):
         '''
-        Sets the model to evaluation mode.
+        Sets the module in evaluation mode.
         '''
-        self.net.eval()
+        self.net.train(False)
+        return
+
+    def load_state_dict(self, loader):
+        self.net.load_state_dict(loader)
         return
 
 

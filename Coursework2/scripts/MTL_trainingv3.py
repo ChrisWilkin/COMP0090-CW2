@@ -16,7 +16,7 @@ K = 4
 LR = 0.001
 BATCH = 4
 MOM = 0.9
-EPOCHS = 1
+EPOCHS = 10
 CLASSES = 3 #Includes a background class = 0 for ROI
 N_SEGS = 2
 IN_CHANNELS = 3
@@ -37,7 +37,8 @@ roi = MTL.ROI(K, body, device)
 seg_criterion = optim.SGD(segment.parameters(), LR, MOM)
 roi_criterion = optim.SGD(roi.net.parameters(), LR, MOM)
 seg_loss = torch.nn.CrossEntropyLoss()
-lr_scheduler = torch.optim.lr_scheduler.StepLR(roi_criterion, step_size=3, gamma=0.1) #learning rate scheduler
+lr_scheduler = torch.optim.lr_scheduler.StepLR(roi_criterion, step_size=2, gamma=0.3) #learning rate scheduler
+lr_scheduler2 = torch.optim.lr_scheduler.StepLR(seg_criterion, step_size=2, gamma=0.3) #learning rate scheduler
 
 #Stored Data
 seg_losses = []
@@ -48,6 +49,7 @@ cls_accuracy = []
 
 
 ##################### Training Loop #######################
+#Seems to converge around epoch 4/5
 
 for epoch in range(EPOCHS):
     #Set 'per-epoch' values
@@ -94,7 +96,6 @@ for epoch in range(EPOCHS):
             #Optimizer step
             seg_criterion.step()
             roi_criterion.step()
-            lr_scheduler.step()
 
             seg_losses.append(seg_l.item())
             roi_losses.append(roi_l.item())
@@ -105,6 +106,43 @@ for epoch in range(EPOCHS):
                 print('Average 25 Batch ROI Loss: ', np.average(roi_losses[-25:]))
                 print(f'25 Batches: {time.time() - t:.2f}s')
                 t = time.time()
+
+    lr_scheduler.step()
+    lr_scheduler2.step()
+
+    total_pixels = 0
+    correct_pixels = 0
+
+    with torch.no_grad():
+        for i, data in enumerate(valloader):
+            images, images_ID, masks, masks_ID, bins, bins_ID = data.values()
+            images = images.to(device)
+            masks = masks.to(device)
+
+            # calculate outputs by running images through the network
+            output = segment(images)
+
+            # segmentation accuracy
+            _, predicted = torch.max(output.data, 1)
+            total_pixels += masks.nelement()  # number of pixels in mask
+            correct_pixels += predicted.eq(masks.data).sum().item()
+
+    # print segmentation accuracy
+    train_accuracy = (correct_pixels / total_pixels) * 100
+    seg_accuracy.append(train_accuracy)
+    print(f'Segmentation accuracy at epoch {epoch}: {round(train_accuracy, 2)}')
+    print(f'Time for Epoch: {time.time() - t:.2f}s')
+
+# saving the loss at each epoch to csv file
+with open('MTL_segment_losses.csv', 'w') as file:
+    file.write('\n'.join(str(i) for i in seg_losses))
+
+with open('MTL_ROI_losses.csv', 'w') as file:
+    file.write('\n'.join(str(i) for i in roi_losses))
+
+# saving accuracy at each epoch to csv file
+with open('MTL_training_seg_accuracy.csv', 'w') as file:
+    file.write('\n'.join(str(i) for i in seg_accuracy ))
 
 torch.save(body.state_dict(), f'MTLBodylr001ep{EPOCHS}.pt')
 torch.save(segment.state_dict(), f'MTLSeglr001ep{EPOCHS}.pt')
