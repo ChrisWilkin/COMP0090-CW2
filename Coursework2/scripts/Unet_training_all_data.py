@@ -10,7 +10,7 @@ import time
 import sys
 import os
 import csv
-
+sys.path.append(os.path.dirname(__file__)[:-len('/scripts')])
 sys.path.insert(1, '..')  # add folder above to path for easy import
 import data_pipeline.DataUtils as DataUtils
 import data_pipeline.DatasetClass as DatasetClass
