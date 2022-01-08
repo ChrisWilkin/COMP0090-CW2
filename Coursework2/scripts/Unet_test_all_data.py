@@ -4,6 +4,7 @@ import time
 import sys
 import os
 from torch.utils.data import Dataset, DataLoader
+sys.path.append(os.path.dirname(__file__)[:-len('/scripts')])
 sys.path.insert(1, '..') # add folder above to path for easy import 
 import data_pipeline.DataUtils as DataUtils
 import data_pipeline.DatasetClass as DatasetClass
@@ -18,7 +19,7 @@ print(device)
 
 net = Unet.Unet(k=4).to(device)
 net = net.double()
-net.load_state_dict(torch.load(os.path.dirname(__file__)[:-len('/scripts')]+'/networks/Weights/Unetk4lr001ep8v2.pt', map_location=device))
+net.load_state_dict(torch.load(os.path.dirname(__file__)[:-len('/scripts')]+'/networks/Weights/Unetk4lr0005ep10v1.pt', map_location=device))
 
 loss_func = torch.nn.CrossEntropyLoss()
 
@@ -45,8 +46,14 @@ with torch.no_grad():
             msks = output[0]
         
 test_accuracy = (correct_pixels/total_pixels)*100
-print(f'Segmentation accuracy on test set: {round(test_accuracy,2)}')       
+print(f'Segmentation accuracy on test set: {round(test_accuracy,2)}')   
+ 
+with open('Unet_alldata_test_Accuracy.csv', 'w') as file:
+    file.write(f'{test_accuracy}')
         
+with open('u_net_test_losses.csv', 'w') as file:
+    file.write('\n'.join(str(i) for i in losses))
+
             
             
 
