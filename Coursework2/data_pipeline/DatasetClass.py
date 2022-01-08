@@ -107,8 +107,9 @@ class PetSegmentationDataSet(Dataset):
 class CompletePetDataSet(Dataset):
     def __init__(self, file, group_name, *args):
         '''
-        folder: the folder to take data from (test/train/val)
-        *args: specifies which targets to load data from (mask, bbox, bins)
+        file: file path for h5 file
+        group_name: train / test / val
+        *args: specifies which targets to load data from (masks, bboxes, bins)
         '''
         super().__init__()
         self.file = file
@@ -146,9 +147,9 @@ class CompletePetDataSet(Dataset):
                 'images_ID': img_ID}
         if mask:
             masks, masks_ID = DataUtils.load_group_h5(self.file,self.group_name,'masks')
+            masks = torch.from_numpy(masks)
             masks[masks==3]=1
             masks[masks==2]=0
-            masks = torch.from_numpy(masks)
             data['masks'] = masks
             data['masks_ID'] = masks_ID
         if bin:
@@ -246,9 +247,9 @@ class CompletePetDataSet(Dataset):
                 'images_ID': img_ID}
         if mask:
             masks, masks_ID = DataUtils.load_group_h5(self.file,self.group_name,'masks')
+            masks = torch.from_numpy(masks)
             masks[masks==3]=1
             masks[masks==2]=0
-            masks = torch.from_numpy(masks)
             data['masks'] = masks
             data['masks_ID'] = masks_ID
         if bin:
