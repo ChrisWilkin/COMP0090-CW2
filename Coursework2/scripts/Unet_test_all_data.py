@@ -46,10 +46,14 @@ with torch.no_grad():
             msks = output[0]
         
 test_accuracy = (correct_pixels/total_pixels)*100
-print(f'Segmentation accuracy on test set: {round(test_accuracy,2)}')    
+print(f'Segmentation accuracy on test set: {round(test_accuracy,2)}')   
+ 
 with open('Unet_alldata_test_Accuracy.csv', 'w') as file:
-    file.write(test_accuracy)
+    file.write(f'{test_accuracy}')
         
+with open('u_net_test_losses.csv', 'w') as file:
+    file.write('\n'.join(str(i) for i in losses))
+
             
             
 
