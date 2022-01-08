@@ -128,8 +128,9 @@ class Unet(nn.Module):
         upconv3 = self.upconv3(out6)
         # 7th and final block
         # concat input from 6th and 1st block
-        print(upconv3.size())
-        print(out1.size())
+        
+        #print(upconv3.size())
+        #print(out1.size())
         segmentation = self.conv7(torch.cat([upconv3, out1], 1))
 
         #apply sigmoid to ensure output is between 0 and 1
