@@ -34,7 +34,8 @@ net = net.double()
 
 ## loss and optimiser
 loss_func = torch.nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+#optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+optimizer = optim.Adam(net.parameters(), lr=0.001)
 
 
 # training loop for Unet
@@ -119,4 +120,4 @@ for epoch in range(epochs):
 
 print('Training done.')
 print('Total training time = {:.2f}s'.format( time.time()-training_start_time))
-torch.save(net.state_dict(), os.path.dirname(__file__)+'/networks/Weights/MTLk4lr001ep8v2.pt')
+torch.save(net.state_dict(), os.path.dirname(os.path.abspath(__file__))[:-len('/scripts')]+'/networks/Weights/MTLk4lr001ep8v2.pt')
