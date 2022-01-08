@@ -263,6 +263,11 @@ class CompletePetDataSet(Dataset):
             bboxes = torch.from_numpy(bboxes)
             data['bboxes'] = bboxes
             data['bboxes_ID'] = bboxes_ID
+
+        if bbox and self.group_name == 'train': #Weird bug where bboxes have two less data points than others
+            for key in data.keys():
+                data[key] = data[key][:3666]
+
         print(f'Finished Loading Data ({time.time() - t:.2f}s)')
         return data
     

@@ -14,7 +14,7 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 
 K = 4
 LR = 0.001
-BATCH = 8
+BATCH = 4
 MOM = 0.9
 EPOCHS = 1
 CLASSES = 3 #Includes a background class = 0 for ROI
@@ -22,15 +22,15 @@ N_SEGS = 2
 IN_CHANNELS = 3
 
 #Load the data in
-dataset = DatasetClass.CompletePetDataSet('CompleteDataset/AllData.h5', 'train', 'masks', 'bbox', 'bins')
+dataset = DatasetClass.CompletePetDataSet('CompleteDataset/AllData.h5', 'train', 'masks', 'bboxes', 'bins')
 dataloader = DataLoader(dataset, batch_size=BATCH, shuffle=True, num_workers=0)
 valset = DatasetClass.CompletePetDataSet('CompleteDataset/AllData.h5', 'val', 'masks', 'bins') #Validation and Test sets do not have ROI data :(
 valloader = DataLoader(valset, batch_size=BATCH, shuffle=True, num_workers=0)
 
 
 #Network Components
-body = MTL.Body(K, IN_CHANNELS, N_SEGS)
-segment = MTL.Segmentation(K, N_SEGS, body)
+body = MTL.Body(K, IN_CHANNELS, N_SEGS).to(device).double()
+segment = MTL.Segmentation(K, N_SEGS, body).to(device).double()
 roi = MTL.ROI(K, body, device)
 
 #Losses and Criterions
@@ -55,18 +55,19 @@ for epoch in range(EPOCHS):
     t = time.time()
     
     for i, data in enumerate(dataloader):
-        images, images_ID, masks, masks_ID, boxes, boxes_ID, bins, bins_ID = data.values()
-        images = images.to(device)
+        images, images_ID, masks, masks_ID, bins, bins_ID, boxes, boxes_ID = data.values()
+        images = images.to(device) / 255
         masks = masks.to(device)
         boxes = boxes.to(device)
         bins = bins.to(device)
+        bins = bins[:, 0] + 1 #select only cat/dog data and covert to 1/2 labels
 
         #Seg specific setup
         masks = masks.long()
 
         #ROI specific setup
         roi_labels = bins.to(torch.int64)
-        roi_ims = list(image.to(device) for image in images)
+        roi_ims = list(image for image in images)
         roi_targets = [{'boxes': boxes[i].reshape((1,4)), 'labels': roi_labels[i].reshape(1)} for i in range(len(roi_labels))]
 
         #Clear gradients

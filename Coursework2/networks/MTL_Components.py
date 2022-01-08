@@ -116,7 +116,13 @@ class Segmentation(nn.Module):
                                    ,Conv2d(k,n_segments,kernel_size=3,stride=1,padding=1))
 
     def forward(self, x):
+        #Forward pass through unet stem
         upconv2 = self.body(x)
+
+        #Update residual values
+        self.out1 = self.body.out1
+        self.out2 = self.body.out2
+
         #6th convolutional block 
         #concat output from 5th and 2nd blocks as inputs
         out6 = self.conv6(torch.cat([upconv2, self.out2],1))
@@ -129,18 +135,19 @@ class Segmentation(nn.Module):
 
 class ROI():
     def __init__(self, k, body: Body, device='cpu'):
-        self.backbone = body.to(device)
-        self.backbone.out_channels = k*4
+        self.backbone = body
+        self.backbone.out_channels = k*2
 
         self.anchor_generator = AnchorGenerator(sizes=((32, 64, 128, 256, 512),), aspect_ratios=((0.5, 1.0, 2.0),))
         # feature maps for ROI cropping and ROI sizes 
         self.roi_pooler = torchvision.ops.MultiScaleRoIAlign(featmap_names=['0'], output_size=7, sampling_ratio=2)
-        self.net = FasterRCNN(self.backbone, num_classes=3, rpn_anchor_generator=self.anchor_generator, box_roi_pool=self.roi_pooler).to(device)
+        self.net = FasterRCNN(self.backbone, num_classes=3, rpn_anchor_generator=self.anchor_generator, box_roi_pool=self.roi_pooler,
+                                min_size=256, max_size=256).to(device)
         self.net = self.net.double()
 
-    def forward(self, images, targets: dict):
-        assert 'boxes' in targets.keys
-        assert 'labels' in targets.keys
+    def forward(self, images, targets: list):
+        assert 'boxes' in targets[0].keys()
+        assert 'labels' in targets[0].keys()
 
         return self.net(images, targets)
 
