@@ -10,10 +10,11 @@ sys.path.append(os.path.dirname(__file__)[:-len('/scripts')])
 sys.path.insert(1, '..') 
 import data_pipeline.DatasetClass as DatasetClass
 import networks.MTL_Components as MTL
+import data_pipeline.DataUtils as Utils
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-K = 4
+K = 12
 CLASSES = 3 #Includes a background class = 0 for ROI
 N_SEGS = 2
 IN_CHANNELS = 3
@@ -21,7 +22,7 @@ PATH = os.path.dirname(__file__)[:-len('/scripts')] + '/networks/Weights/'
 
 #Load the data in
 dataset = DatasetClass.CompletePetDataSet('CompleteDataset/AllData.h5', 'test', 'masks', 'bins')
-sub = Subset(dataset, np.arange(1, 16, 1))
+sub = Subset(dataset, np.arange(1, 32, 1))
 dataloader = DataLoader(sub, batch_size=8, shuffle=True, num_workers=0)
 
 
@@ -31,9 +32,9 @@ segment = MTL.Segmentation(K, N_SEGS, body).to(device).double()
 roi = MTL.ROI(K, body, device) #MTL.ROI is not actually a nn.Module class, but intiates the pytorch FasterRCNN class inside it with relevant helper functions
 
 #Load pretrained weights
-body.load_state_dict(torch.load(PATH + 'MTLBodylr001ep10.pt', map_location=device))
-segment.load_state_dict(torch.load(PATH + 'MTLSeglr001ep10.pt', map_location=device))
-roi.load_state_dict(torch.load(PATH + 'MTLROIlr001ep10.pt', map_location=device))
+body.load_state_dict(torch.load('MTLBodyk12lr01ep1.pt', map_location=device))
+segment.load_state_dict(torch.load('MTLSegk12lr01ep1.pt', map_location=device))
+roi.load_state_dict(torch.load('MTLROIk12lr01ep1.pt', map_location=device))
 
 #Set eval mode
 #body.train(False)
@@ -79,18 +80,22 @@ with torch.no_grad():
             print('skipping this batch...')
         else:
             #Retrieve predictions
-
-            roi_scores = torch.stack([d['scores'] for d in roi_output], 0)
-            roi_labels = torch.stack([d['labels'] for d in roi_output], 0)
-            roi_boxes = torch.stack([d['boxes'] for d in roi_output], 0)
+            try:
+                roi_scores = torch.stack([d['scores'][0] for d in roi_output], 0)
+                roi_labels = torch.stack([d['labels'][0] for d in roi_output], 0)
+                roi_boxes = torch.stack([d['boxes'][0] for d in roi_output], 0)
+            except:
+                print('No Predictions')
+                sys.exit()
 
             # segmentation accuracy
-            _, predicted = torch.max(seg_output.data, 1)
+            predicted = torch.argmax(seg_output, 1)
+            print(predicted.shape)
             total_pixels += masks.nelement()  # number of pixels in mask
             correct_pixels += predicted.eq(masks.data).sum().item()
 
             #classification accuracy 
-            pred = roi_labels[:, 0]
+            pred = roi_labels
             total_cls += len(bins)
             correct_cls += torch.sum(pred == bins).item()
 
@@ -103,20 +108,13 @@ with torch.no_grad():
 
     print(seg_test_accuracy, cls_test_accuracy)
 
-img = images[0].permute(1, 2, 0).detach().cpu().numpy() / 255
-fig, ax = plt.subplots()
+image = images[0].detach().cpu()
+mask = torch.argmax(seg_output[0], 0).detach().cpu()
 
-seg_output = torch.argmax(seg_output, 1)
-msk = np.ones(seg_output[0].shape)-seg_output[0].detach().cpu().numpy() - 1
-img = img - np.repeat(msk[:, :, None], 3, axis=2)
-print(img)
-ax.imshow(img)
+print(bins)
+print(roi_labels)
 
-label = "dog" if roi_labels[0, 0] == 1 else "cat"
-fig.text(0.25, 0.80,label,fontsize = 10,bbox ={'facecolor':'white','alpha':0.6,'pad':10})
-
-#fig.show()
-plt.show()
+Utils.visualise_masks(image, mask)
 
 
 # saving the loss at each epoch to csv file

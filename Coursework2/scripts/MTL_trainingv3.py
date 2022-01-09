@@ -12,11 +12,12 @@ import networks.MTL_Components as MTL
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-K = 4
-LR = 0.001
+K = 12
+SEG_LR = 0.001  
+ROI_LR = 0.0001
 BATCH = 4
 MOM = 0.9
-EPOCHS = 10
+EPOCHS = 1
 CLASSES = 3 #Includes a background class = 0 for ROI
 N_SEGS = 2
 IN_CHANNELS = 3
@@ -34,11 +35,11 @@ segment = MTL.Segmentation(K, N_SEGS, body).to(device).double()
 roi = MTL.ROI(K, body, device)
 
 #Losses and Criterions
-seg_criterion = optim.SGD(segment.parameters(), LR, MOM)
-roi_criterion = optim.SGD(roi.net.parameters(), LR, MOM)
+seg_criterion = optim.SGD(segment.parameters(), SEG_LR, MOM)
+roi_criterion = optim.SGD(roi.net.parameters(), ROI_LR, MOM)
 seg_loss = torch.nn.CrossEntropyLoss()
-lr_scheduler = torch.optim.lr_scheduler.StepLR(roi_criterion, step_size=2, gamma=0.3) #learning rate scheduler
-lr_scheduler2 = torch.optim.lr_scheduler.StepLR(seg_criterion, step_size=2, gamma=0.3) #learning rate scheduler
+lr_scheduler = torch.optim.lr_scheduler.StepLR(roi_criterion, step_size=2, gamma=0.2) #learning rate scheduler
+lr_scheduler2 = torch.optim.lr_scheduler.StepLR(seg_criterion, step_size=2, gamma=0.2) #learning rate scheduler
 
 #Stored Data
 seg_losses = []
@@ -55,6 +56,7 @@ for epoch in range(EPOCHS):
     #Set 'per-epoch' values
     print('\nEPOCH ', epoch)
     t = time.time()
+    t_e = time.time()
     
     for i, data in enumerate(dataloader):
         images, images_ID, masks, masks_ID, bins, bins_ID, boxes, boxes_ID = data.values()
@@ -131,7 +133,7 @@ for epoch in range(EPOCHS):
     train_accuracy = (correct_pixels / total_pixels) * 100
     seg_accuracy.append(train_accuracy)
     print(f'Segmentation accuracy at epoch {epoch}: {round(train_accuracy, 2)}')
-    print(f'Time for Epoch: {time.time() - t:.2f}s')
+    print(f'Time for Epoch: {time.time() - t_e:.2f}s')
 
 # saving the loss at each epoch to csv file
 with open('MTL_segment_losses.csv', 'w') as file:
@@ -144,9 +146,9 @@ with open('MTL_ROI_losses.csv', 'w') as file:
 with open('MTL_training_seg_accuracy.csv', 'w') as file:
     file.write('\n'.join(str(i) for i in seg_accuracy ))
 
-torch.save(body.state_dict(), f'MTLBodylr001ep{EPOCHS}.pt')
-torch.save(segment.state_dict(), f'MTLSeglr001ep{EPOCHS}.pt')
-torch.save(roi.net.state_dict(), f'MTLROIlr001ep{EPOCHS}.pt')
+torch.save(body.state_dict(), f'MTLBodyk12lr01ep{EPOCHS}.pt')
+torch.save(segment.state_dict(), f'MTLSegk12lr01ep{EPOCHS}.pt')
+torch.save(roi.net.state_dict(), f'MTLROIk12lr01ep{EPOCHS}.pt')
 
 print('Saved Network Weights')
         

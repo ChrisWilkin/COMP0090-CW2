@@ -142,8 +142,8 @@ def visualise_masks(img, msk):
     img =  img.permute(1,2,0).numpy()/255
     msk = msk.permute(0,1).numpy()
     msk = np.repeat(msk[:,:,None], 3, axis=2)
-    print(msk.shape)
     msk = np.ones(msk.shape)-msk
+    print(msk[100:150, 100:150])
     img = img * (1 - msk)
             
     ax.imshow(img)
