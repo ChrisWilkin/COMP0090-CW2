@@ -22,7 +22,7 @@ PATH = os.path.dirname(__file__)[:-len('/scripts')] + '/networks/Weights/'
 
 #Load the data in
 dataset = DatasetClass.CompletePetDataSet('CompleteDataset/AllData.h5', 'test', 'masks', 'bins')
-sub = Subset(dataset, np.arange(1, 32, 1))
+sub = Subset(dataset, np.arange(1, 1000, 20))
 dataloader = DataLoader(sub, batch_size=8, shuffle=True, num_workers=0)
 
 
@@ -32,13 +32,13 @@ segment = MTL.Segmentation(K, N_SEGS, body).to(device).double()
 roi = MTL.ROI(K, body, device) #MTL.ROI is not actually a nn.Module class, but intiates the pytorch FasterRCNN class inside it with relevant helper functions
 
 #Load pretrained weights
-body.load_state_dict(torch.load('MTLBodyk12lr01ep1.pt', map_location=device))
-segment.load_state_dict(torch.load('MTLSegk12lr01ep1.pt', map_location=device))
-roi.load_state_dict(torch.load('MTLROIk12lr01ep1.pt', map_location=device))
+body.load_state_dict(torch.load(PATH+'MTLBodyk12lr01ep3.pt', map_location=device))
+segment.load_state_dict(torch.load(PATH+'MTLSegk12lr01ep3.pt', map_location=device))
+roi.load_state_dict(torch.load(PATH+'MTLROIk12lr01ep3.pt', map_location=device))
 
 #Set eval mode
-#body.train(False)
-#segment.train(False)
+body.train(False)
+segment.train(False)
 roi.eval()
 
 #Stored Data
@@ -108,13 +108,14 @@ with torch.no_grad():
 
     print(seg_test_accuracy, cls_test_accuracy)
 
-image = images[0].detach().cpu()
-mask = torch.argmax(seg_output[0], 0).detach().cpu()
+    image = images[0].detach().cpu()
+    mask = predicted[0].detach().cpu()
+    print(mask.shape)
 
-print(bins)
-print(roi_labels)
+    print(bins)
+    print(roi_labels)
 
-Utils.visualise_masks(image, mask)
+    Utils.visualise_MTL(image, mask, roi_labels[0].detach().cpu(), roi_boxes[0].detach().cpu())
 
 
 # saving the loss at each epoch to csv file

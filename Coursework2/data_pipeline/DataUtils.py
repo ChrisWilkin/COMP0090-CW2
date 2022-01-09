@@ -5,6 +5,7 @@ import numpy as np
 from numpy.lib.npyio import save
 from numpy.testing._private.utils import print_assert_equal
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 
 PATH = f'{os.path.dirname(__file__)[:-14]}/Datasets'
@@ -139,17 +140,36 @@ def summarise_h5_structure(path):
 
 def visualise_masks(img, msk):
     fig, ax = plt.subplots()
-    img =  img.permute(1,2,0).numpy()/255
+    img =  img.permute(1,2,0).numpy()
     msk = msk.permute(0,1).numpy()
     msk = np.repeat(msk[:,:,None], 3, axis=2)
     msk = np.ones(msk.shape)-msk
-    print(msk[100:150, 100:150])
     img = img * (1 - msk)
             
     ax.imshow(img)
-
-    
-    # remove one of these
-    fig.show()
     plt.show()
+
+def visualise_MTL(img, msk, cls, box):
+    fig, ax = plt.subplots()
+    img =  img.permute(1,2,0).numpy()
+    msk = msk.permute(0,1).numpy()
+    msk = np.repeat(msk[:,:,None], 3, axis=2)
+    msk = np.ones(msk.shape)-msk
+    img = img * (1 - msk)
+
+    box = np.round(box)
+    x = box[0]
+    y = box[1]
+    width = box[2] - box[0]
+    height = box[3] - box[1]
+    rect = patches.Rectangle((x, y), width, height, linewidth=1, edgecolor='r', facecolor='none')
+    ax.add_patch(rect)
+
+    label = "dog" if cls == 0 else "cat"
+    fig.text(0.25, 0.80,label,fontsize = 10,bbox ={'facecolor':'white','alpha':0.6,'pad':10})
+            
+    ax.imshow(img)
+    plt.show()
+
+
 

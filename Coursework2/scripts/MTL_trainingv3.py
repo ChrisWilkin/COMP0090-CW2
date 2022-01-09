@@ -24,9 +24,11 @@ IN_CHANNELS = 3
 
 #Load the data in
 dataset = DatasetClass.CompletePetDataSet('CompleteDataset/AllData.h5', 'train', 'masks', 'bboxes', 'bins')
-dataloader = DataLoader(dataset, batch_size=BATCH, shuffle=True, num_workers=0)
+sub1 = Subset(dataset, np.arange(0, 500, 1))
+dataloader = DataLoader(sub1, batch_size=BATCH, shuffle=True, num_workers=0)
 valset = DatasetClass.CompletePetDataSet('CompleteDataset/AllData.h5', 'val', 'masks', 'bins') #Validation and Test sets do not have ROI data :(
-valloader = DataLoader(valset, batch_size=BATCH, shuffle=True, num_workers=0)
+sub2 = Subset(valset, np.arange(0, 500, 1))
+valloader = DataLoader(sub2, batch_size=BATCH, shuffle=True, num_workers=0)
 
 
 #Network Components
@@ -35,11 +37,11 @@ segment = MTL.Segmentation(K, N_SEGS, body).to(device).double()
 roi = MTL.ROI(K, body, device)
 
 #Losses and Criterions
-seg_criterion = optim.SGD(segment.parameters(), SEG_LR, MOM)
-roi_criterion = optim.SGD(roi.net.parameters(), ROI_LR, MOM)
+seg_criterion = optim.SGD(segment.parameters(), SEG_LR, MOM, weight_decay=0.005)
+roi_criterion = optim.SGD(roi.net.parameters(), ROI_LR, MOM, weight_decay=0.005)
 seg_loss = torch.nn.CrossEntropyLoss()
-lr_scheduler = torch.optim.lr_scheduler.StepLR(roi_criterion, step_size=2, gamma=0.2) #learning rate scheduler
-lr_scheduler2 = torch.optim.lr_scheduler.StepLR(seg_criterion, step_size=2, gamma=0.2) #learning rate scheduler
+lr_scheduler = torch.optim.lr_scheduler.StepLR(roi_criterion, step_size=1, gamma=0.1) #learning rate scheduler
+lr_scheduler2 = torch.optim.lr_scheduler.StepLR(seg_criterion, step_size=1, gamma=0.2) #learning rate scheduler
 
 #Stored Data
 seg_losses = []
@@ -97,7 +99,7 @@ for epoch in range(EPOCHS):
 
             #Optimizer step
             seg_criterion.step()
-            roi_criterion.step()
+            #roi_criterion.step()
 
             seg_losses.append(seg_l.item())
             roi_losses.append(roi_l.item())
@@ -109,13 +111,15 @@ for epoch in range(EPOCHS):
                 print(f'25 Batches: {time.time() - t:.2f}s')
                 t = time.time()
 
-    lr_scheduler.step()
+    #lr_scheduler.step()
     lr_scheduler2.step()
 
     total_pixels = 0
     correct_pixels = 0
 
     with torch.no_grad():
+        segment.train(False)
+        body.train(False)
         for i, data in enumerate(valloader):
             images, images_ID, masks, masks_ID, bins, bins_ID = data.values()
             images = images.to(device)
@@ -134,6 +138,9 @@ for epoch in range(EPOCHS):
     seg_accuracy.append(train_accuracy)
     print(f'Segmentation accuracy at epoch {epoch}: {round(train_accuracy, 2)}')
     print(f'Time for Epoch: {time.time() - t_e:.2f}s')
+
+    segment.train(True)
+    body.train(True)
 
 # saving the loss at each epoch to csv file
 with open('MTL_segment_losses.csv', 'w') as file:
