@@ -69,12 +69,7 @@ class Body(nn.Module):
 
         self.conv7_1 = nn.Sequential(BatchNorm2d(2*k),ReLU(inplace=True),Conv2d(2*k,k,kernel_size=3,stride=1,padding=1)
                                     ,BatchNorm2d(k),ReLU(inplace=True),Conv2d(k,k,kernel_size=3,stride=1,padding=1))
-
-        self.bincls = nn.Sequential(nn.Flatten(), nn.Linear(256 * 256 * k, 256), nn.Linear(256, 1))
-        #BRANCHING POINT
         self.mid = None
-
-
 
     def forward(self,x):
         x = x.double()
@@ -87,6 +82,7 @@ class Body(nn.Module):
         #3rd convolutional block
         out3 = self.conv3(maxpool2)
         maxpool3 = self.maxpool3(out3)
+        self.mid = maxpool3
         #4th convolutional block
         self.mid = maxpool3
         #BOTTOM of U-net
@@ -112,15 +108,14 @@ class Segmentation(nn.Module):
         # im size = 256 x 256
         # 7th and final  conv block, concat input with output from 1st block. 
         # Input = k + k = 2k
-        self.bincls = nn.Sequential(nn.Flatten(), nn.Linear(256 * 256 * k, 256), nn.Linear(256, 1))
         self.conv7_2 = Conv2d(k,n_segments,kernel_size=3,stride=1,padding=1)
+        self.cls = nn.Sequential(nn.Flatten(), nn.Linear(32 * 32 *4 * k, 1))
 
     def forward(self, x):
         #Forward pass through unet stem
         conv7_1 = self.body(x)
         mid = self.body.mid
-
-        cls = torch.sigmoid(self.bincls(mid))
+        cls = torch.sigmoid(self.cls(mid))
         #7th and final block
         #concat input from 6th and 1st block
         out7 = self.conv7_2(conv7_1)

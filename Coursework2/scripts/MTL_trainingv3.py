@@ -16,10 +16,9 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 K = 12
 SEG_LR = 0.01  
 ROI_LR = 0.0001
-CLS_LR = 0.01
-BATCH = 4
+BATCH = 6
 MOM = 0.9
-EPOCHS = 4
+EPOCHS = 1
 CLASSES = 3 #Includes a background class = 0 for ROI
 N_SEGS = 2
 IN_CHANNELS = 3
@@ -41,18 +40,18 @@ body = MTL2.Body(K, IN_CHANNELS, N_SEGS).to(device).double()
 segment = MTL2.Segmentation(K, N_SEGS, body).to(device).double()
 roi = MTL2.ROI(K, body, device)
 
-alpha = 1 #This is the weighting for Segmentation, leave at 1 normally
-beta = 0.1 #This is the weighting for ROI, try 1, 0.5, 0.25, 0.1
-gamma = 0.5 #This is the weighting for Binary Classification
+alpha = 1
+beta = 0.25
+gamma = 0.01
 
 #Losses and Criterions
 seg_criterion = optim.SGD(segment.parameters(), SEG_LR, MOM, weight_decay=0.005)
 roi_criterion = optim.SGD(roi.net.parameters(), ROI_LR, MOM, weight_decay=0.005)
-cls_criterion = optim.SGD(body.parameters(), CLS_LR, MOM, weight_decay=0.005)
+#cls_criterion = optim.SGD(body.parameters(), CLS_LR, MOM, weight_decay=0.005)
 seg_loss = torch.nn.CrossEntropyLoss()
 cls_loss = torch.nn.BCELoss()
-lr_scheduler = torch.optim.lr_scheduler.StepLR(roi_criterion, step_size=1, gamma=0.2) #learning rate scheduler
-lr_scheduler2 = torch.optim.lr_scheduler.StepLR(seg_criterion, step_size=1, gamma=0.5) #learning rate scheduler
+lr_scheduler = torch.optim.lr_scheduler.StepLR(roi_criterion, step_size=1, gamma=0.1) #learning rate scheduler
+lr_scheduler2 = torch.optim.lr_scheduler.StepLR(seg_criterion, step_size=2, gamma=0.2) #learning rate scheduler
 
 #Stored Data
 seg_losses = []
@@ -94,7 +93,7 @@ for epoch in range(EPOCHS):
 
         #Forward pass -- First check that the networks work successfully
         try:
-            seg_output, bin_output = segment(images)
+            seg_output, bins_output = segment(images)
             roi_output = roi.forward(roi_ims, roi_targets)
         # except value error in case bbox values = 0
         except ValueError as e:
@@ -102,12 +101,13 @@ for epoch in range(EPOCHS):
             print('skipping this batch...')
         else:
             #loss calc
-            seg_l = alpha * seg_loss(seg_output, masks) + gamma * cls_loss(bin_output.double(), bins[:, None].double() - 1)
+            seg_l = alpha * seg_loss(seg_output, masks) + gamma * cls_loss(bins_output.double(), bins[:, None].double() - 1)
             roi_l = beta * sum(loss for loss in roi_output.values()) # sum loss values
-            cls_l = gamma * cls_loss(bin_output.double(), bins[:, None].double() - 1)
+            cls_l = gamma * cls_loss(bins_output.double(), bins[:, None].double())
+            seg_cls_l = seg_l + cls_l
 
             #Backward pass
-            seg_l.backward()
+            seg_cls_l.backward()
             roi_l.backward()
 
             #Optimizer step
