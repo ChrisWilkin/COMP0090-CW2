@@ -10,6 +10,7 @@ sys.path.append(os.path.dirname(__file__)[:-len('/scripts')])
 sys.path.insert(1, '..') 
 import data_pipeline.DatasetClass as DatasetClass
 import networks.MTL_Components as MTL
+import networks.MTL_Componentsv2 as MTL2
 import data_pipeline.DataUtils as Utils
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -27,18 +28,18 @@ dataloader = DataLoader(sub, batch_size=8, shuffle=True, num_workers=0)
 
 
 #Network Components
-body = MTL.Body(K, IN_CHANNELS, N_SEGS).to(device).double()
-segment = MTL.Segmentation(K, N_SEGS, body).to(device).double()
-roi = MTL.ROI(K, body, device) #MTL.ROI is not actually a nn.Module class, but intiates the pytorch FasterRCNN class inside it with relevant helper functions
+body = MTL2.Body(K, IN_CHANNELS, N_SEGS).to(device).double()
+segment = MTL2.Segmentation(K, N_SEGS, body).to(device).double()
+roi = MTL2.ROI(K, body, device) #MTL.ROI is not actually a nn.Module class, but intiates the pytorch FasterRCNN class inside it with relevant helper functions
 
 #Load pretrained weights
-body.load_state_dict(torch.load(PATH+'MTLBodyk12lr01ep3.pt', map_location=device))
-segment.load_state_dict(torch.load(PATH+'MTLSegk12lr01ep3.pt', map_location=device))
-roi.load_state_dict(torch.load(PATH+'MTLROIk12lr01ep3.pt', map_location=device))
+body.load_state_dict(torch.load('MTL2Bodyk12lr01ep5.pt', map_location=device))
+segment.load_state_dict(torch.load('MTL2Segk12lr01ep5.pt', map_location=device))
+roi.load_state_dict(torch.load('MTL2ROIk12lr0001ep5.pt', map_location=device))
 
 #Set eval mode
-body.train(False)
-segment.train(False)
+#body.train(False)
+#segment.train(False)
 roi.eval()
 
 #Stored Data
@@ -90,7 +91,6 @@ with torch.no_grad():
 
             # segmentation accuracy
             predicted = torch.argmax(seg_output, 1)
-            print(predicted.shape)
             total_pixels += masks.nelement()  # number of pixels in mask
             correct_pixels += predicted.eq(masks.data).sum().item()
 

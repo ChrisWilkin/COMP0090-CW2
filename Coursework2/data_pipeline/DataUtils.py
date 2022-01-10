@@ -165,7 +165,7 @@ def visualise_MTL(img, msk, cls, box):
     rect = patches.Rectangle((x, y), width, height, linewidth=1, edgecolor='r', facecolor='none')
     ax.add_patch(rect)
 
-    label = "dog" if cls == 0 else "cat"
+    label = "dog" if cls == 2 else "cat"
     fig.text(0.25, 0.80,label,fontsize = 10,bbox ={'facecolor':'white','alpha':0.6,'pad':10})
             
     ax.imshow(img)

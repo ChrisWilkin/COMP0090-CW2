@@ -9,15 +9,16 @@ sys.path.append(os.path.dirname(__file__)[:-len('/scripts')])
 sys.path.insert(1, '..') 
 import data_pipeline.DatasetClass as DatasetClass
 import networks.MTL_Components as MTL
+import networks.MTL_Componentsv2 as MTL2
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 K = 12
-SEG_LR = 0.001  
+SEG_LR = 0.01  
 ROI_LR = 0.0001
 BATCH = 4
 MOM = 0.9
-EPOCHS = 1
+EPOCHS = 5
 CLASSES = 3 #Includes a background class = 0 for ROI
 N_SEGS = 2
 IN_CHANNELS = 3
@@ -25,23 +26,26 @@ IN_CHANNELS = 3
 #Load the data in
 dataset = DatasetClass.CompletePetDataSet('CompleteDataset/AllData.h5', 'train', 'masks', 'bboxes', 'bins')
 sub1 = Subset(dataset, np.arange(0, 500, 1))
-dataloader = DataLoader(sub1, batch_size=BATCH, shuffle=True, num_workers=0)
+dataloader = DataLoader(dataset, batch_size=BATCH, shuffle=True, num_workers=0)
 valset = DatasetClass.CompletePetDataSet('CompleteDataset/AllData.h5', 'val', 'masks', 'bins') #Validation and Test sets do not have ROI data :(
 sub2 = Subset(valset, np.arange(0, 500, 1))
-valloader = DataLoader(sub2, batch_size=BATCH, shuffle=True, num_workers=0)
+valloader = DataLoader(valset, batch_size=BATCH, shuffle=True, num_workers=0)
 
 
 #Network Components
-body = MTL.Body(K, IN_CHANNELS, N_SEGS).to(device).double()
-segment = MTL.Segmentation(K, N_SEGS, body).to(device).double()
-roi = MTL.ROI(K, body, device)
+body = MTL2.Body(K, IN_CHANNELS, N_SEGS).to(device).double()
+segment = MTL2.Segmentation(K, N_SEGS, body).to(device).double()
+roi = MTL2.ROI(K, body, device)
+
+alpha = 1
+beta = 0.25
 
 #Losses and Criterions
 seg_criterion = optim.SGD(segment.parameters(), SEG_LR, MOM, weight_decay=0.005)
 roi_criterion = optim.SGD(roi.net.parameters(), ROI_LR, MOM, weight_decay=0.005)
 seg_loss = torch.nn.CrossEntropyLoss()
 lr_scheduler = torch.optim.lr_scheduler.StepLR(roi_criterion, step_size=1, gamma=0.1) #learning rate scheduler
-lr_scheduler2 = torch.optim.lr_scheduler.StepLR(seg_criterion, step_size=1, gamma=0.2) #learning rate scheduler
+lr_scheduler2 = torch.optim.lr_scheduler.StepLR(seg_criterion, step_size=2, gamma=0.2) #learning rate scheduler
 
 #Stored Data
 seg_losses = []
@@ -90,8 +94,8 @@ for epoch in range(EPOCHS):
             print('skipping this batch...')
         else:
             #loss calc
-            seg_l = seg_loss(seg_output, masks)
-            roi_l = sum(loss for loss in roi_output.values()) # sum loss values
+            seg_l = alpha * seg_loss(seg_output, masks)
+            roi_l = beta * sum(loss for loss in roi_output.values()) # sum loss values
 
             #Backward pass
             seg_l.backward()
@@ -99,7 +103,7 @@ for epoch in range(EPOCHS):
 
             #Optimizer step
             seg_criterion.step()
-            #roi_criterion.step()
+            roi_criterion.step()
 
             seg_losses.append(seg_l.item())
             roi_losses.append(roi_l.item())
@@ -111,36 +115,36 @@ for epoch in range(EPOCHS):
                 print(f'25 Batches: {time.time() - t:.2f}s')
                 t = time.time()
 
-    #lr_scheduler.step()
+    lr_scheduler.step()
     lr_scheduler2.step()
 
-    total_pixels = 0
-    correct_pixels = 0
-
-    with torch.no_grad():
-        segment.train(False)
-        body.train(False)
-        for i, data in enumerate(valloader):
-            images, images_ID, masks, masks_ID, bins, bins_ID = data.values()
-            images = images.to(device)
-            masks = masks.to(device)
-
-            # calculate outputs by running images through the network
-            output = segment(images)
-
-            # segmentation accuracy
-            _, predicted = torch.max(output.data, 1)
-            total_pixels += masks.nelement()  # number of pixels in mask
-            correct_pixels += predicted.eq(masks.data).sum().item()
-
+    #total_pixels = 0
+    #correct_pixels = 0
+#
+    #with torch.no_grad():
+    #    segment.train(False)
+    #    body.train(False)
+    #    for i, data in enumerate(valloader):
+    #        images, images_ID, masks, masks_ID, bins, bins_ID = data.values()
+    #        images = images.to(device)
+    #        masks = masks.to(device)
+#
+    #        # calculate outputs by running images through the network
+    #        output = segment(images)
+#
+    #        # segmentation accuracy
+    #        _, predicted = torch.max(output.data, 1)
+    #        total_pixels += masks.nelement()  # number of pixels in mask
+    #        correct_pixels += predicted.eq(masks.data).sum().item()
+#
     # print segmentation accuracy
-    train_accuracy = (correct_pixels / total_pixels) * 100
-    seg_accuracy.append(train_accuracy)
-    print(f'Segmentation accuracy at epoch {epoch}: {round(train_accuracy, 2)}')
-    print(f'Time for Epoch: {time.time() - t_e:.2f}s')
-
-    segment.train(True)
-    body.train(True)
+    #train_accuracy = (correct_pixels / total_pixels) * 100
+    #seg_accuracy.append(train_accuracy)
+    #print(f'Segmentation accuracy at epoch {epoch}: {round(train_accuracy, 2)}')
+    #print(f'Time for Epoch: {time.time() - t_e:.2f}s')
+    #
+    #segment.train(True)
+    #body.train(True)
 
 # saving the loss at each epoch to csv file
 with open('MTL_segment_losses.csv', 'w') as file:
@@ -153,9 +157,9 @@ with open('MTL_ROI_losses.csv', 'w') as file:
 with open('MTL_training_seg_accuracy.csv', 'w') as file:
     file.write('\n'.join(str(i) for i in seg_accuracy ))
 
-torch.save(body.state_dict(), f'MTLBodyk12lr01ep{EPOCHS}.pt')
-torch.save(segment.state_dict(), f'MTLSegk12lr01ep{EPOCHS}.pt')
-torch.save(roi.net.state_dict(), f'MTLROIk12lr01ep{EPOCHS}.pt')
+torch.save(body.state_dict(), f'MTL2Bodyk12lr01ep{EPOCHS}.pt')
+torch.save(segment.state_dict(), f'MTL2Segk12lr01ep{EPOCHS}.pt')
+torch.save(roi.net.state_dict(), f'MTL2ROIk12lr0001ep{EPOCHS}.pt')
 
 print('Saved Network Weights')
         
