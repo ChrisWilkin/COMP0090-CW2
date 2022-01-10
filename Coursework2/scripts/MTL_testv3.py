@@ -20,6 +20,7 @@ CLASSES = 3 #Includes a background class = 0 for ROI
 N_SEGS = 2
 IN_CHANNELS = 3
 PATH = os.path.dirname(__file__)[:-len('/scripts')] + '/networks/Weights/'
+THRESH = 0.5
 
 #Load the data in
 dataset = DatasetClass.CompletePetDataSet('CompleteDataset/AllData.h5', 'test', 'masks', 'bins')
@@ -33,9 +34,9 @@ segment = MTL2.Segmentation(K, N_SEGS, body).to(device).double()
 roi = MTL2.ROI(K, body, device) #MTL.ROI is not actually a nn.Module class, but intiates the pytorch FasterRCNN class inside it with relevant helper functions
 
 #Load pretrained weights
-body.load_state_dict(torch.load('MTL2Bodyk12lr01ep4a10.pt', map_location=device))
-segment.load_state_dict(torch.load('MTL2Segk12lr01ep4a10.pt', map_location=device))
-roi.load_state_dict(torch.load('MTL2ROIk12lr0001ep4b1.pt', map_location=device))
+body.load_state_dict(torch.load('YOUR-FILE-NAME-HERE1.pt', map_location=device))
+segment.load_state_dict(torch.load('YOUR-FILE-NAME-HERE2.pt', map_location=device))
+roi.load_state_dict(torch.load('YOUR-FILE-NAME-HERE3.pt', map_location=device))
 
 #Set eval mode
 #body.train(False)
@@ -73,7 +74,7 @@ with torch.no_grad():
 
         #Forward pass -- First check that the networks work successfully
         try:
-            seg_output = segment(images)
+            seg_output, bin_output = segment(images)
             roi_output = roi.forward(roi_ims)
         # except value error in case bbox values = 0
         except ValueError as e:
@@ -95,9 +96,10 @@ with torch.no_grad():
             correct_pixels += predicted.eq(masks.data).sum().item()
 
             #classification accuracy 
-            pred = roi_labels
+            bin_output = (bin_output >= THRESH) * 1 + 1
+            pred = bin_output
             total_cls += len(bins)
-            correct_cls += torch.sum(pred == bins).item()
+            correct_cls += torch.sum(pred == bins[:, None]).item()
 
 
         # print segmentation accuracy
@@ -114,8 +116,9 @@ with torch.no_grad():
 
         print(bins)
         print(roi_labels)
+        print(bin_output)
 
-        Utils.visualise_MTL(image, mask, roi_labels[0].detach().cpu(), roi_boxes[0].detach().cpu())
+        Utils.visualise_MTL(image, mask, bin_output[0].detach().cpu(), roi_boxes[0].detach().cpu())
 
 
 # saving the loss at each epoch to csv file

@@ -18,7 +18,7 @@ SEG_LR = 0.01
 ROI_LR = 0.0001
 BATCH = 6
 MOM = 0.9
-EPOCHS = 1
+EPOCHS = 6
 CLASSES = 3 #Includes a background class = 0 for ROI
 N_SEGS = 2
 IN_CHANNELS = 3
@@ -29,7 +29,7 @@ PRINT = 25 # batch interval to print data at
 #Load the data in
 dataset = DatasetClass.CompletePetDataSet('CompleteDataset/AllData.h5', 'train', 'masks', 'bboxes', 'bins')
 sub1 = Subset(dataset, np.arange(0, 500, 1))
-dataloader = DataLoader(sub1, batch_size=BATCH, shuffle=True, num_workers=0)
+dataloader = DataLoader(dataset, batch_size=BATCH, shuffle=True, num_workers=0)
 #valset = DatasetClass.CompletePetDataSet('CompleteDataset/AllData.h5', 'val', 'masks', 'bins') #Validation and Test sets do not have ROI data :(
 #sub2 = Subset(valset, np.arange(0, 100, 1))
 #valloader = DataLoader(sub2, batch_size=BATCH, shuffle=True, num_workers=0)
@@ -50,7 +50,7 @@ roi_criterion = optim.SGD(roi.net.parameters(), ROI_LR, MOM, weight_decay=0.005)
 #cls_criterion = optim.SGD(body.parameters(), CLS_LR, MOM, weight_decay=0.005)
 seg_loss = torch.nn.CrossEntropyLoss()
 cls_loss = torch.nn.BCELoss()
-lr_scheduler = torch.optim.lr_scheduler.StepLR(roi_criterion, step_size=1, gamma=0.1) #learning rate scheduler
+lr_scheduler = torch.optim.lr_scheduler.StepLR(roi_criterion, step_size=2, gamma=0.1) #learning rate scheduler
 lr_scheduler2 = torch.optim.lr_scheduler.StepLR(seg_criterion, step_size=2, gamma=0.2) #learning rate scheduler
 
 #Stored Data
@@ -120,10 +120,10 @@ for epoch in range(EPOCHS):
 
         if (i+1) % PRINT == 0:
                 print(f'Batch {i}/{len(dataloader)}')
-                print('Average 25 Batch Seg Loss: ', np.average(seg_losses[-PRINT:]))
-                print('Average 25 Batch ROI Loss: ', np.average(roi_losses[-PRINT:]))
-                print('Average 25 Batch CLS Loss: ', np.average(cls_losses[-PRINT:]))
-                print(f'25 Batches: {time.time() - t:.2f}s')
+                print(f'Average {PRINT} Batch Seg Loss: ', np.average(seg_losses[-PRINT:]))
+                print(f'Average {PRINT} Batch ROI Loss: ', np.average(roi_losses[-PRINT:]))
+                print(f'Average {PRINT} Batch CLS Loss: ', np.average(cls_losses[-PRINT:]))
+                print(f'{PRINT} Batches: {time.time() - t:.2f}s')
                 t = time.time()
 
     lr_scheduler.step()
@@ -158,22 +158,22 @@ for epoch in range(EPOCHS):
     #body.train(True)
 
 # saving the loss at each epoch to csv file
-with open('MTL_segment_losses.csv', 'w') as file:
+with open('MTL_segment_lossesv2.csv', 'w') as file:
     file.write('\n'.join(str(i) for i in seg_losses))
 
-with open('MTL_ROI_losses.csv', 'w') as file:
+with open('MTL_ROI_lossesv2.csv', 'w') as file:
     file.write('\n'.join(str(i) for i in roi_losses))
 
-with open('MTL_Cls_losses.csv', 'w') as file:
+with open('MTL_Cls_lossesv2.csv', 'w') as file:
     file.write('\n'.join(str(i) for i in cls_losses))
 
 # saving accuracy at each epoch to csv file
 #with open('MTL_training_seg_accuracy.csv', 'w') as file:
 #    file.write('\n'.join(str(i) for i in seg_accuracy ))
 
-torch.save(body.state_dict(), f'YOUR-FILE-NAME-HERE.pt')
-torch.save(segment.state_dict(), f'YOUR-FILE-NAME-HERE.pt')
-torch.save(roi.net.state_dict(), f'YOUR-FILE-NAME-HERE.pt')
+torch.save(body.state_dict(), f'YOUR-FILE-NAME-HERE1.pt')
+torch.save(segment.state_dict(), f'YOUR-FILE-NAME-HERE2.pt')
+torch.save(roi.net.state_dict(), f'YOUR-FILE-NAME-HERE3.pt')
 
 print('Saved Network Weights')
         
