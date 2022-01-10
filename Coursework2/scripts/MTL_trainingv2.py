@@ -14,10 +14,10 @@ sys.path.insert(1, '..') # add folder above to path for easy import
 #sys.path.append(os.path.dirname(__file__)[:-len('/scripts')])
 import data_pipeline.DataUtils as DataUtils
 import data_pipeline.DatasetClass as DatasetClass
-import networks.U_net_classification as MTL
+import networks.U_net_classification_ROI as MTL
 
 # read in Yipeng's training data
-dataset = DatasetClass.CompletePetDataSet('CompleteDataset/AllData.h5','train','masks','bins')
+dataset = DatasetClass.CompletePetDataSet('CompleteDataset/AllData.h5','train','masks','bins','bboxes')
 dataloader = DataLoader(dataset, batch_size=10, shuffle=True, num_workers=0)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -31,6 +31,7 @@ net = net.double()
 
 ## loss and optimiser
 loss_func = torch.nn.CrossEntropyLoss()
+loss_func_ROI = torch.sqrt(torch.nn.MSELoss())
 optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
 
@@ -59,6 +60,7 @@ for epoch in range(epochs):
         if i == 0:
             seg_loss = loss_func(segmentation, masks.long())
             cls_loss = loss_func(classification,bins.long())
+
             first_loss.append(seg_loss.item())
             first_loss.append(cls_loss.item())
             #print("seg_loss",seg_loss)
