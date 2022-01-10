@@ -33,9 +33,9 @@ segment = MTL2.Segmentation(K, N_SEGS, body).to(device).double()
 roi = MTL2.ROI(K, body, device) #MTL.ROI is not actually a nn.Module class, but intiates the pytorch FasterRCNN class inside it with relevant helper functions
 
 #Load pretrained weights
-body.load_state_dict(torch.load('MTL2Bodyk12lr01ep5.pt', map_location=device))
-segment.load_state_dict(torch.load('MTL2Segk12lr01ep5.pt', map_location=device))
-roi.load_state_dict(torch.load('MTL2ROIk12lr0001ep5.pt', map_location=device))
+body.load_state_dict(torch.load('MTL2Bodyk12lr01ep4a10.pt', map_location=device))
+segment.load_state_dict(torch.load('MTL2Segk12lr01ep4a10.pt', map_location=device))
+roi.load_state_dict(torch.load('MTL2ROIk12lr0001ep4b1.pt', map_location=device))
 
 #Set eval mode
 #body.train(False)
@@ -100,22 +100,22 @@ with torch.no_grad():
             correct_cls += torch.sum(pred == bins).item()
 
 
-    # print segmentation accuracy
-    seg_test_accuracy = (correct_pixels / total_pixels) * 100
-    seg_accuracy.append(seg_test_accuracy)
-    cls_test_accuracy = correct_cls / total_cls * 100
-    cls_accuracy.append(cls_test_accuracy)
+        # print segmentation accuracy
+        seg_test_accuracy = (correct_pixels / total_pixels) * 100
+        seg_accuracy.append(seg_test_accuracy)
+        cls_test_accuracy = correct_cls / total_cls * 100
+        cls_accuracy.append(cls_test_accuracy)
 
-    print(seg_test_accuracy, cls_test_accuracy)
+        print(seg_test_accuracy, cls_test_accuracy)
 
-    image = images[0].detach().cpu()
-    mask = predicted[0].detach().cpu()
-    print(mask.shape)
+        image = images[0].detach().cpu()
+        mask = predicted[0].detach().cpu()
+        print(mask.shape)
 
-    print(bins)
-    print(roi_labels)
+        print(bins)
+        print(roi_labels)
 
-    Utils.visualise_MTL(image, mask, roi_labels[0].detach().cpu(), roi_boxes[0].detach().cpu())
+        Utils.visualise_MTL(image, mask, roi_labels[0].detach().cpu(), roi_boxes[0].detach().cpu())
 
 
 # saving the loss at each epoch to csv file

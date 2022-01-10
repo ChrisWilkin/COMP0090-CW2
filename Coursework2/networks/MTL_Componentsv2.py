@@ -70,26 +70,25 @@ class Body(nn.Module):
         self.conv7_1 = nn.Sequential(BatchNorm2d(2*k),ReLU(inplace=True),Conv2d(2*k,k,kernel_size=3,stride=1,padding=1)
                                     ,BatchNorm2d(k),ReLU(inplace=True),Conv2d(k,k,kernel_size=3,stride=1,padding=1))
 
+        self.bincls = nn.Sequential(nn.Flatten(), nn.Linear(256 * 256 * k, 256), nn.Linear(256, 1))
         #BRANCHING POINT
+        self.mid = None
 
-        self.out1 = None
-        self.out2 = None
 
 
     def forward(self,x):
         x = x.double()
         #1st convolutional block
         out1 = self.conv1(x)
-        self.out1 = out1
         maxpool1 = self.maxpool1(out1)
         #2nd convolutional block
         out2 = self.conv2(maxpool1)
-        self.out2 = out2
         maxpool2 = self.maxpool2(out2)
         #3rd convolutional block
         out3 = self.conv3(maxpool2)
         maxpool3 = self.maxpool3(out3)
         #4th convolutional block
+        self.mid = maxpool3
         #BOTTOM of U-net
         out4 = self.conv4(maxpool3)
         upconv1 = self.upconv1(out4)
@@ -102,7 +101,6 @@ class Body(nn.Module):
         upconv3 = self.upconv3(out6)
 
         out7 = self.conv7_1(torch.cat([upconv3, out1],1))
-        
     
         return out7
 
@@ -114,17 +112,20 @@ class Segmentation(nn.Module):
         # im size = 256 x 256
         # 7th and final  conv block, concat input with output from 1st block. 
         # Input = k + k = 2k
+        self.bincls = nn.Sequential(nn.Flatten(), nn.Linear(256 * 256 * k, 256), nn.Linear(256, 1))
         self.conv7_2 = Conv2d(k,n_segments,kernel_size=3,stride=1,padding=1)
 
     def forward(self, x):
         #Forward pass through unet stem
         conv7_1 = self.body(x)
+        mid = self.body.mid
 
+        cls = torch.sigmoid(self.bincls(mid))
         #7th and final block
         #concat input from 6th and 1st block
         out7 = self.conv7_2(conv7_1)
 
-        return out7
+        return out7, cls
 
 class ROI():
     def __init__(self, k, body: Body, device='cpu'):
