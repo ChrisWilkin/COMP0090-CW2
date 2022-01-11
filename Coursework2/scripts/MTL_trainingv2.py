@@ -49,17 +49,34 @@ for epoch in range(epochs):
     first_loss = []
     for i, data in enumerate(dataloader):
         print(i)
-        images, images_ID, masks, masks_ID, bins, bins_ID = data.values()
-        images =  images.to(device)
+        images, images_ID, masks, masks_ID, bins, bins_ID, boxes, boxes_ID = data.values()
+        images = images.to(device) / 255
         masks = masks.to(device)
-        bins = bins[:,0].to(device)
+        boxes = boxes.to(device)
+        bins = bins.to(device)
+        bins = bins[:, 0] + 1 #select only cat/dog data and covert to 1/2 labels
+
+        #Seg specific setup
+        masks = masks.long()
+
+        #ROI specific setup
+        roi_labels = bins.to(torch.int64)
+        roi_ims = list(image for image in images)
+        roi_targets = [{'boxes': boxes[i].reshape((1,4)), 'labels': roi_labels[i].reshape(1)} for i in range(len(roi_labels))]
+
+        print(f' roi_labels {roi_labels}, roi ims {roi_ims}, roi_targets {roi_targets}')
+        #Clear gradients
         
         optimizer.zero_grad()
-        segmentation, classification = net(images)
-        
+        segmentation, classification, ROI = net(images)
+
+        print(f' ROI predictions are {ROI}')
+        break
+    
         if i == 0:
             seg_loss = loss_func(segmentation, masks.long())
             cls_loss = loss_func(classification,bins.long())
+            ROI_loss = loss_func_ROI(ROI,boxes.long())
 
             first_loss.append(seg_loss.item())
             first_loss.append(cls_loss.item())
