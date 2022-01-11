@@ -49,7 +49,8 @@ roi_losses = []
 total_losses = []
 seg_accuracy = []
 cls_accuracy = []
-
+IOU_testset = []
+IOU_list = []
 ###################### Testing Loop #########################
 
 total_pixels = 0
@@ -59,7 +60,11 @@ correct_cls = 0
 
 with torch.no_grad():   
     for i, data in enumerate(dataloader):
-        print(f'Batch {i} / {len(dataloader)}')
+        batch_total_pixels = 0
+        batch_correct_pixels = 0
+        batch_total_cls = 0
+        batch_correct_cls = 0
+        print(f'Batch {i+1} / {len(dataloader)}')
         images, images_ID, masks, masks_ID, bins, bins_ID = data.values()
         images = images.to(device) / 255
         masks = masks.to(device)
@@ -92,39 +97,46 @@ with torch.no_grad():
 
             # segmentation accuracy
             predicted = torch.argmax(seg_output, 1)
-            total_pixels += masks.nelement()  # number of pixels in mask
-            correct_pixels += predicted.eq(masks.data).sum().item()
-            batch_IOU = []
+            
+            batch_total_pixels =  masks.nelement()  # number of pixels in mask
+            total_pixels += batch_total_pixels
+            
+            batch_correct_pixels = predicted.eq(masks.data).sum().item()
+            correct_pixels += batch_correct_pixels
+            
             # segmentation IOU for each image
+            batch_IOU = []
             for i in range(len(predicted)):
                 intersection = torch.sum(torch.logical_and(predicted[i],masks[i]))
                 union = torch.sum(torch.logical_or(predicted[i],masks[i]))
                 IOU = intersection/union
                 batch_IOU.append(IOU.item())
+                IOU_testset.append(IOU.item())
 
             #classification accuracy 
             bin_output = (bin_output >= THRESH) * 1 + 1
             pred = bin_output
-            total_cls += len(bins)
-            correct_cls += torch.sum(pred == bins[:, None]).item()
+            batch_total_cls = len(bins)
+            total_cls += batch_total_cls 
+            batch_correct_cls = torch.sum(pred == bins[:, None]).item()
+            correct_cls += batch_correct_cls
 
 
         # print segmentation accuracy
-        seg_test_accuracy = (correct_pixels / total_pixels) * 100
-        seg_accuracy.append(seg_test_accuracy)
-        cls_test_accuracy = correct_cls / total_cls * 100
-        cls_accuracy.append(cls_test_accuracy)
+        seg_batch_accuracy = (batch_correct_pixels / batch_total_pixels) * 100
+        seg_accuracy.append(seg_batch_accuracy)
+        cls_batch_accuracy = batch_correct_cls / batch_total_cls * 100
+        cls_accuracy.append(cls_batch_accuracy)
         IOU_batch = np.average(batch_IOU) * 100
         IOU_list.append(IOU_batch)
         
         
 
-        print(seg_test_accuracy, cls_test_accuracy)
-        print("Batch IOU:", IOU_batch)
+        print("Batch segmentation accuracy:",round(seg_batch_accuracy,2),"Batch classification accuracy:", cls_batch_accuracy)
+        print("Average batch IOU:", round(IOU_batch,2))
 
         image = images[0].detach().cpu()
         mask = predicted[0].detach().cpu()
-        print(mask.shape)
 
         print(bins)
         print(roi_labels)
@@ -133,6 +145,16 @@ with torch.no_grad():
         Utils.visualise_MTL(image, mask, bin_output[0].detach().cpu(), roi_boxes[0].detach().cpu())
         
 
+
+seg_test_accuracy = (correct_pixels / total_pixels) * 100
+cls_test_accuracy = correct_cls / total_cls * 100
+IOU_test = np.average(IOU_testset) * 100
+
+
+
+
+print("Segmentation accuracy over entire test set:",round(seg_test_accuracy,2),"Classification accuracy over entire test set:", cls_test_accuracy)
+print("Average IOU over entire test set:", round(IOU_test,2))
 # saving the loss at each epoch to csv file
 #with open('MTL_segment_TESTlosses.csv', 'w') as file:
 #    file.write('\n'.join(str(i) for i in seg_losses))
@@ -143,5 +165,3 @@ with torch.no_grad():
 ## saving accuracy at each epoch to csv file
 #with open('MTL_test_seg_accuracy.csv', 'w') as file:
 #    file.write('\n'.join(str(i) for i in seg_accuracy ))
-
-
