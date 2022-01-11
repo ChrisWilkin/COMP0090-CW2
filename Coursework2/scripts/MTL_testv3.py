@@ -94,6 +94,13 @@ with torch.no_grad():
             predicted = torch.argmax(seg_output, 1)
             total_pixels += masks.nelement()  # number of pixels in mask
             correct_pixels += predicted.eq(masks.data).sum().item()
+            batch_IOU = []
+            # segmentation IOU for each image
+            for i in range(len(predicted)):
+                intersection = torch.sum(torch.logical_and(predicted[i],masks[i]))
+                union = torch.sum(torch.logical_or(predicted[i],masks[i]))
+                IOU = intersection/union
+                batch_IOU.append(IOU.item())
 
             #classification accuracy 
             bin_output = (bin_output >= THRESH) * 1 + 1
@@ -107,8 +114,13 @@ with torch.no_grad():
         seg_accuracy.append(seg_test_accuracy)
         cls_test_accuracy = correct_cls / total_cls * 100
         cls_accuracy.append(cls_test_accuracy)
+        IOU_batch = np.average(batch_IOU) * 100
+        IOU_list.append(IOU_batch)
+        
+        
 
         print(seg_test_accuracy, cls_test_accuracy)
+        print("Batch IOU:", IOU_batch)
 
         image = images[0].detach().cpu()
         mask = predicted[0].detach().cpu()
@@ -119,7 +131,7 @@ with torch.no_grad():
         print(bin_output)
 
         Utils.visualise_MTL(image, mask, bin_output[0].detach().cpu(), roi_boxes[0].detach().cpu())
-
+        
 
 # saving the loss at each epoch to csv file
 #with open('MTL_segment_TESTlosses.csv', 'w') as file:
@@ -131,10 +143,5 @@ with torch.no_grad():
 ## saving accuracy at each epoch to csv file
 #with open('MTL_test_seg_accuracy.csv', 'w') as file:
 #    file.write('\n'.join(str(i) for i in seg_accuracy ))
-
-        
-
-
-
 
 
