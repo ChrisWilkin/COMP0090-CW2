@@ -25,7 +25,7 @@ THRESH = 0.5
 #Load the data in
 dataset = DatasetClass.CompletePetDataSet('CompleteDataset/AllData.h5', 'test', 'masks', 'bins')
 #sub = Subset(dataset, np.arange(1, 1000, 20))
-dataloader = DataLoader(sub, batch_size=8, shuffle=True, num_workers=0)
+dataloader = DataLoader(dataset, batch_size=8, shuffle=True, num_workers=0)
 
 
 #Network Components
