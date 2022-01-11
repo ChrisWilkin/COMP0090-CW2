@@ -19,7 +19,6 @@ K = 12
 CLASSES = 3 #Includes a background class = 0 for ROI
 N_SEGS = 2
 IN_CHANNELS = 3
-PATH = os.path.dirname(__file__)[:-len('/scripts')] + '/networks/Weights/'
 THRESH = 0.5
 
 #Load the data in
@@ -34,6 +33,8 @@ segment = MTL2.Segmentation(K, N_SEGS, body).to(device).double()
 roi = MTL2.ROI(K, body, device) #MTL.ROI is not actually a nn.Module class, but intiates the pytorch FasterRCNN class inside it with relevant helper functions
 
 #Load pretrained weights
+#This looks in the Coursework2 folder by default. Change it to PATH + 'file-name.pt' to look in the networks/weights folder
+PATH = os.path.dirname(__file__)[:-len('/scripts')] + '/networks/Weights/'
 body.load_state_dict(torch.load('YOUR-FILE-NAME-HERE1.pt', map_location=device))
 segment.load_state_dict(torch.load('YOUR-FILE-NAME-HERE2.pt', map_location=device))
 roi.load_state_dict(torch.load('YOUR-FILE-NAME-HERE3.pt', map_location=device))
