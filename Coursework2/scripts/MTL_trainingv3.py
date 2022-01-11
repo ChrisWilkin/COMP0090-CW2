@@ -1,3 +1,4 @@
+from pickle import TRUE
 import numpy as np
 import torch
 import torch.optim as optim
@@ -5,6 +6,7 @@ from torch.utils.data import Dataset, DataLoader, Subset
 import time
 import sys
 import os
+from Coursework2.networks.MTL_Componentsv2 import ROI
 sys.path.append(os.path.dirname(__file__)[:-len('/scripts')])
 sys.path.insert(1, '..') 
 import data_pipeline.DatasetClass as DatasetClass
@@ -61,6 +63,10 @@ total_losses = []
 seg_accuracy = []
 cls_accuracy = []
 
+RANDOM_WEIGHTS = False  #Trigger random optimiser steps (randomly choose which task to update each  batch)
+ROI_UPDATE = True
+SEG_UPDATE = True
+
 
 ##################### Training Loop #######################
 #Seems to converge around epoch 4/5
@@ -72,6 +78,15 @@ for epoch in range(EPOCHS):
     t_e = time.time()
     
     for i, data in enumerate(dataloader):
+        ROI_UPDATE = True
+        SEG_UPDATE = True
+        if RANDOM_WEIGHTS:
+            i = np.random.randint(2)
+            if i == 1:
+                ROI_UPDATE = False
+            elif i == 0:
+                SEG_UPDATE = False
+
         images, images_ID, masks, masks_ID, bins, bins_ID, boxes, boxes_ID = data.values()
         images = images.to(device) / 255
         masks = masks.to(device)
@@ -111,8 +126,10 @@ for epoch in range(EPOCHS):
             roi_l.backward()
 
             #Optimizer step
-            seg_criterion.step()
-            roi_criterion.step()
+            if SEG_UPDATE:
+                seg_criterion.step()
+            if ROI_UPDATE:
+                roi_criterion.step()
 
             seg_losses.append(seg_l.item())
             roi_losses.append(roi_l.item())
