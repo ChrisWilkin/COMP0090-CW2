@@ -59,25 +59,20 @@ class Body(nn.Module):
         # output channels reduced by 4 vs input (8k -> 2k)
         self.conv5 = nn.Sequential(BatchNorm2d(8*k),ReLU(inplace=True),Conv2d(8*k,4*k,kernel_size=3,stride=1,padding=1)
                                     ,BatchNorm2d(4*k),ReLU(inplace=True),Conv2d(4*k,4*k,kernel_size=3,stride=1,padding=1))
-        self.upconv2 = nn.Sequential(nn.Upsample(scale_factor=(2,2), mode='bilinear'), Conv2d(4*k,2*k,kernel_size=3,stride=1,padding=1))
 
-        # Input channels = 2k + 2k = 4k
-        # output channels reduced by 4 vs input (4k -> k)
-        self.conv6 = nn.Sequential(BatchNorm2d(4*k),ReLU(inplace=True),Conv2d(4*k,2*k,kernel_size=3,stride=1,padding=1)
-                                    ,BatchNorm2d(2*k),ReLU(inplace=True),Conv2d(2*k,2*k,kernel_size=3,stride=1,padding=1))
-        self.upconv3 = nn.Sequential(nn.Upsample(scale_factor=(2,2), mode='bilinear'), Conv2d(2*k,k,kernel_size=3,stride=1,padding=1))
-
-        self.conv7_1 = nn.Sequential(BatchNorm2d(2*k),ReLU(inplace=True),Conv2d(2*k,k,kernel_size=3,stride=1,padding=1)
-                                    ,BatchNorm2d(k),ReLU(inplace=True),Conv2d(k,k,kernel_size=3,stride=1,padding=1))
         self.mid = None
+        self.out1 = None
+        self.out2 = None
 
     def forward(self,x):
         x = x.double()
         #1st convolutional block
         out1 = self.conv1(x)
+        self.out1 = out1
         maxpool1 = self.maxpool1(out1)
         #2nd convolutional block
         out2 = self.conv2(maxpool1)
+        self.out2 = out2
         maxpool2 = self.maxpool2(out2)
         #3rd convolutional block
         out3 = self.conv3(maxpool2)
@@ -90,20 +85,24 @@ class Body(nn.Module):
         #5th convolutional block 
         #concat output from 4th and 3rd block as inputs
         out5 = self.conv5(torch.cat([upconv1,out3],1))
-        upconv2 = self.upconv2(out5)
-
-        out6 = self.conv6(torch.cat([upconv2, out2],1))
-        upconv3 = self.upconv3(out6)
-
-        out7 = self.conv7_1(torch.cat([upconv3, out1],1))
     
-        return out7
+        return out5
 
 class Segmentation(nn.Module):
     def __init__(self, k, n_segments, body: Body):
         super(Segmentation, self).__init__()
         self.body = body
         #CONTINUATION OF UNET STEM
+        self.upconv2 = nn.Sequential(nn.Upsample(scale_factor=(2,2), mode='bilinear'), Conv2d(4*k,2*k,kernel_size=3,stride=1,padding=1))
+
+        # Input channels = 2k + 2k = 4k
+        # output channels reduced by 4 vs input (4k -> k)
+        self.conv6 = nn.Sequential(BatchNorm2d(4*k),ReLU(inplace=True),Conv2d(4*k,2*k,kernel_size=3,stride=1,padding=1)
+                                    ,BatchNorm2d(2*k),ReLU(inplace=True),Conv2d(2*k,2*k,kernel_size=3,stride=1,padding=1))
+        self.upconv3 = nn.Sequential(nn.Upsample(scale_factor=(2,2), mode='bilinear'), Conv2d(2*k,k,kernel_size=3,stride=1,padding=1))
+
+        self.conv7_1 = nn.Sequential(BatchNorm2d(2*k),ReLU(inplace=True),Conv2d(2*k,k,kernel_size=3,stride=1,padding=1)
+                                    ,BatchNorm2d(k),ReLU(inplace=True),Conv2d(k,k,kernel_size=3,stride=1,padding=1))
         # im size = 256 x 256
         # 7th and final  conv block, concat input with output from 1st block. 
         # Input = k + k = 2k
@@ -112,19 +111,27 @@ class Segmentation(nn.Module):
 
     def forward(self, x):
         #Forward pass through unet stem
-        conv7_1 = self.body(x)
+        out5 = self.body(x)
         mid = self.body.mid
+
+        upconv2 = self.upconv2(out5)
+
+        out6 = self.conv6(torch.cat([upconv2, self.body.out2],1))
+        upconv3 = self.upconv3(out6)
+
+        out7 = self.conv7_1(torch.cat([upconv3, self.body.out1],1))
+
         cls = torch.sigmoid(self.cls(mid))
         #7th and final block
         #concat input from 6th and 1st block
-        out7 = self.conv7_2(conv7_1)
+        out7 = self.conv7_2(out7)
 
         return out7, cls
 
 class ROI():
     def __init__(self, k, body: Body, device='cpu'):
         self.backbone = body
-        self.backbone.out_channels = k
+        self.backbone.out_channels = 4 * k
 
         self.anchor_generator = AnchorGenerator(sizes=((32, 64, 128, 256, 512),), aspect_ratios=((0.5, 1.0, 2.0),))
         # feature maps for ROI cropping and ROI sizes 

@@ -11,6 +11,7 @@ sys.path.insert(1, '..')
 import data_pipeline.DatasetClass as DatasetClass
 import networks.MTL_Components as MTL
 import networks.MTL_Componentsv2 as MTL2
+import networks.MTL_Componentsv3 as MTL3
 
 '''
 To Remove ROI from MTL, hash out all lines marked as #ROI
