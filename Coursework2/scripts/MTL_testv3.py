@@ -35,9 +35,9 @@ roi = MTL2.ROI(K, body, device) #MTL.ROI is not actually a nn.Module class, but 
 #Load pretrained weights
 #This looks in the Coursework2 folder by default. Change it to PATH + 'file-name.pt' to look in the networks/weights folder
 PATH = os.path.dirname(__file__)[:-len('/scripts')] + '/networks/Weights/'
-body.load_state_dict(torch.load('YOUR-FILE-NAME-HERE1.pt', map_location=device))
-segment.load_state_dict(torch.load('YOUR-FILE-NAME-HERE2.pt', map_location=device))
-roi.load_state_dict(torch.load('YOUR-FILE-NAME-HERE3.pt', map_location=device))
+body.load_state_dict(torch.load('MTL_Body_MidBranch_equalweights.pt', map_location=device))
+segment.load_state_dict(torch.load('MTL_Seg_MidBranch_equalweights.pt', map_location=device))
+roi.load_state_dict(torch.load('MTL_ROI_MidBranch_equalweights.pt', map_location=device))
 
 #Set eval mode
 #body.train(False)
