@@ -51,7 +51,7 @@ segment = MTL2.Segmentation(K, N_SEGS, body).to(device).double()
 roi = MTL2.ROI(K, body, device)   #ROI
 
 alpha = 1 # This is the weighting for Segmentation losses
-beta = 0.25 # This is the weighting for ROI losses (1, 0.5, 0.25, 0.1)  #ROI
+beta =  # This is the weighting for ROI losses (1, 0.5, 0.25, 0.1)  #ROI
 gamma = 0.01    # THis is the weighting for Binary Cls (1, 0.01)
 
 #Losses and Criterions
@@ -183,13 +183,13 @@ for epoch in range(EPOCHS):
     #body.train(True)
 
 # saving the loss at each epoch to csv file
-with open('MTL_segment_losses_beta05.csv', 'w') as file:
+with open('MTL_segment_losses_beta0.csv', 'w') as file:
     file.write('\n'.join(str(i) for i in seg_losses))
 
-with open('MTL_ROI_losses_beta05.csv', 'w') as file:   #ROI
+with open('MTL_ROI_losses_beta0.csv', 'w') as file:   #ROI
     file.write('\n'.join(str(i) for i in roi_losses))   #ROI
 
-with open('MTL_Cls_losses_beta05.csv', 'w') as file:
+with open('MTL_Cls_losses_beta0.csv', 'w') as file:
     file.write('\n'.join(str(i) for i in cls_losses))
 
 # saving accuracy at each epoch to csv file
@@ -198,8 +198,8 @@ with open('MTL_Cls_losses_beta05.csv', 'w') as file:
 
 #Make sure that all these files are named clearly and uniquely! Not something like 'MTLv3training.pt'!!!
 #This will save to the root folder by default.
-torch.save(body.state_dict(), f'body_weights_beta_05.pt')   #Network weights for Body
-torch.save(segment.state_dict(), f'seg_weights_beta_05.pt')    #Netowkr weights for segmentation
-torch.save(roi.net.state_dict(), f'roi_weights_beta_05.pt')   #Network weights for ROI  #ROI
+torch.save(body.state_dict(), f'body_weights_beta_0.pt')   #Network weights for Body
+torch.save(segment.state_dict(), f'seg_weights_beta_0.pt')    #Netowkr weights for segmentation
+torch.save(roi.net.state_dict(), f'roi_weights_beta_0.pt')   #Network weights for ROI  #ROI
 
 print('Saved Network Weights')
