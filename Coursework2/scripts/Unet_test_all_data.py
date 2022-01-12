@@ -28,6 +28,10 @@ imgs, msks = [], []
 net.eval()
 total_pixels = 0
 correct_pixels = 0
+
+IOU_testset = []
+IOU_list = []
+
 with torch.no_grad():
     for i, data in enumerate(dataloader):
         images, images_ID, masks, masks_ID = data.values()
@@ -41,11 +45,26 @@ with torch.no_grad():
         _, predicted = torch.max(output.data, 1)
         total_pixels += masks.nelement() # number of pixels in mask
         correct_pixels += predicted.eq(masks.data).sum().item()
+        
+        # segmentation IOU for each image
+        batch_IOU = []
+        for i in range(len(predicted)):
+            intersection = torch.sum(torch.logical_and(predicted[i],masks[i]))
+            union = torch.sum(torch.logical_or(predicted[i],masks[i]))
+            IOU = intersection/union
+            batch_IOU.append(IOU.item())
+            IOU_testset.append(IOU.item())
+        IOU_batch = np.average(batch_IOU) * 100
+        IOU_list.append(IOU_batch)
+        print("Average batch IOU:", round(IOU_batch,2))
         if i == 10:
             imgs = images[0]
             msks = output[0]
         
 test_accuracy = (correct_pixels/total_pixels)*100
+IOU_test = np.average(IOU_testset) * 100
+
+
 print(f'Segmentation accuracy on test set: {round(test_accuracy,2)}')   
  
 with open('Unet_alldata_test_Accuracy.csv', 'w') as file:
@@ -55,7 +74,9 @@ with open('u_net_test_losses.csv', 'w') as file:
     file.write('\n'.join(str(i) for i in losses))
 
             
-            
+with open('UNet_IOU_ALL_DATA.csv', 'w') as file:
+    file.write('\n'.join(str(i) for i in IOU_list))
+    file.write('\n'+f'{IOU_test}')            
 
 print(np.average(losses))
 
