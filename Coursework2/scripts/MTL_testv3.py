@@ -29,9 +29,9 @@ dataloader = DataLoader(dataset, batch_size=8, shuffle=True, num_workers=0)
 
 
 #Network Components
-body = MTL3.Body(K, IN_CHANNELS, N_SEGS).to(device).double()
-segment = MTL3.Segmentation(K, N_SEGS, body).to(device).double()
-roi = MTL3.ROI(K, body, device) #MTL.ROI is not actually a nn.Module class, but intiates the pytorch FasterRCNN class inside it with relevant helper functions
+body = MTL2.Body(K, IN_CHANNELS, N_SEGS).to(device).double()
+segment = MTL2.Segmentation(K, N_SEGS, body).to(device).double()
+roi = MTL2.ROI(K, body, device) #MTL.ROI is not actually a nn.Module class, but intiates the pytorch FasterRCNN class inside it with relevant helper functions
 
 #Load pretrained weights
 #This looks in the Coursework2 folder by default. Change it to PATH + 'file-name.pt' to look in the networks/weights folder
