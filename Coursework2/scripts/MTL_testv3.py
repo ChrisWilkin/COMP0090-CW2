@@ -11,6 +11,7 @@ sys.path.insert(1, '..')
 import data_pipeline.DatasetClass as DatasetClass
 import networks.MTL_Components as MTL
 import networks.MTL_Componentsv2 as MTL2
+import networks.MTL_Componentsv3 as MTL3
 import data_pipeline.DataUtils as Utils
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -139,11 +140,11 @@ with torch.no_grad():
         image = images[0].detach().cpu()
         mask = predicted[0].detach().cpu()
 
-        print(bins)
-        print(roi_labels)
-        print(bin_output)
+        #print(bins)
+        #print(roi_labels)
+        #print(bin_output)
 
-        Utils.visualise_MTL(image, mask, bin_output[0].detach().cpu(), roi_boxes[0].detach().cpu())
+        #Utils.visualise_MTL(image, mask, bin_output[0].detach().cpu(), roi_boxes[0].detach().cpu())
         
 
 
@@ -156,13 +157,12 @@ IOU_test = np.average(IOU_testset) * 100
 
 print("Segmentation accuracy over entire test set:",round(seg_test_accuracy,2),"Classification accuracy over entire test set:", cls_test_accuracy)
 print("Average IOU over entire test set:", round(IOU_test,2))
-# saving the loss at each epoch to csv file
-#with open('MTL_segment_TESTlosses.csv', 'w') as file:
-#    file.write('\n'.join(str(i) for i in seg_losses))
-#
-#with open('MTL_ROI_TESTlosses.csv', 'w') as file:
-#    file.write('\n'.join(str(i) for i in roi_losses))
-#
-## saving accuracy at each epoch to csv file
-#with open('MTL_test_seg_accuracy.csv', 'w') as file:
-#    file.write('\n'.join(str(i) for i in seg_accuracy ))
+#saving the loss at each epoch to csv file
+
+with open('IOU_ALL_DATA.csv', 'w') as file:
+    file.write('\n'.join(str(i) for i in IOU_list))
+    file.write('\n'+f'{IOU_test}')
+
+# saving accuracy at each epoch to csv file
+with open('MTL_test_seg_accuracy.csv', 'w') as file:
+    file.write('\n'.join(str(i) for i in seg_accuracy ))
