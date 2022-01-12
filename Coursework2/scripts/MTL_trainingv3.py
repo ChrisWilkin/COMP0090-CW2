@@ -25,12 +25,12 @@ SEG_LR = 0.01
 ROI_LR = 0.0001  #ROI
 BATCH = 6
 MOM = 0.9
-EPOCHS = 6
+EPOCHS = 10
 CLASSES = 3 #Includes a background class = 0 for ROI
 N_SEGS = 2
 IN_CHANNELS = 3
 
-PRINT = 25 # batch interval to print data at 
+PRINT = 50 # batch interval to print data at 
 
 
 #Load the data in
@@ -43,13 +43,13 @@ dataloader = DataLoader(dataset, batch_size=BATCH, shuffle=True, num_workers=0)
 
 
 #Network Components
-body = MTL2.Body(K, IN_CHANNELS, N_SEGS).to(device).double()
-segment = MTL2.Segmentation(K, N_SEGS, body).to(device).double()
-roi = MTL2.ROI(K, body, device)   #ROI
+body = MTL3.Body(K, IN_CHANNELS, N_SEGS).to(device).double()
+segment = MTL3.Segmentation(K, N_SEGS, body).to(device).double()
+roi = MTL3.ROI(K, body, device)   #ROI
 
 alpha = 1 # This is the weighting for Segmentation losses
-beta = 0.25 # This is the weighting for ROI losses (1, 0.5, 0.25, 0.1)  #ROI
-gamma = 0.01    # THis is the weighting for Binary Cls (1, 0.01)
+beta = 1 # This is the weighting for ROI losses (1, 0.5, 0.25, 0.1)  #ROI
+gamma = 1    # THis is the weighting for Binary Cls (1, 0.01)
 
 #Losses and Criterions
 seg_criterion = optim.SGD(segment.parameters(), SEG_LR, MOM, weight_decay=0.005)
@@ -180,13 +180,13 @@ for epoch in range(EPOCHS):
     #body.train(True)
 
 # saving the loss at each epoch to csv file
-with open('MTL_segment_lossesv2.csv', 'w') as file:
+with open('MTL_segment_losses_midbranch_equalweights.csv', 'w') as file:
     file.write('\n'.join(str(i) for i in seg_losses))
 
-with open('MTL_ROI_lossesv2.csv', 'w') as file:   #ROI
+with open('MTL_ROI_losses_midbranch_equalweights.csv', 'w') as file:   #ROI
     file.write('\n'.join(str(i) for i in roi_losses))   #ROI
 
-with open('MTL_Cls_lossesv2.csv', 'w') as file:
+with open('MTL_Cls_losses_midbranch_equalweights.csv', 'w') as file:
     file.write('\n'.join(str(i) for i in cls_losses))
 
 # saving accuracy at each epoch to csv file
@@ -195,9 +195,9 @@ with open('MTL_Cls_lossesv2.csv', 'w') as file:
 
 #Make sure that all these files are named clearly and uniquely! Not something like 'MTLv3training.pt'!!!
 #This will save to the root folder by default.
-torch.save(body.state_dict(), f'YOUR-FILE-NAME-HERE1.pt')   #Network weights for Body 
-torch.save(segment.state_dict(), f'YOUR-FILE-NAME-HERE2.pt')    #Netowkr weights for segmentation
-torch.save(roi.net.state_dict(), f'YOUR-FILE-NAME-HERE3.pt')   #Network weights for ROI  #ROI
+torch.save(body.state_dict(), f'MTL_Body_MidBranch_equalweights.pt')   #Network weights for Body 
+torch.save(segment.state_dict(), f'MTL_Seg_MidBranch_equalweights.pt')    #Netowkr weights for segmentation
+torch.save(roi.net.state_dict(), f'MTL_RoI_MidBranch_equalweights.pt')   #Network weights for ROI  #ROI
 
 print('Saved Network Weights')
         
