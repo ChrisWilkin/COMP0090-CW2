@@ -14,12 +14,8 @@ import networks.MTL_Components as MTL
 import networks.MTL_Componentsv2 as MTL2
 import networks.MTL_Componentsv3 as MTL3
 
-'''
-To Remove ROI from MTL, hash out all lines marked as #ROI
-'''
 
 parser = argparse.ArgumentParser()
-#parser.add_argument("--roi", help="to remove ROI from the MTL, set to False", type=bool, default=True)
 parser.add_argument('--roi', help="includes ROI in MTL", dest='inc_roi', action='store_true')
 parser.add_argument('--no-roi', help="exludes ROI from MTL", dest='inc_roi', action='store_false')
 parser.set_defaults(roi=True)
