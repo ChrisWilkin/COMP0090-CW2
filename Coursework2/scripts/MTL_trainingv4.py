@@ -34,6 +34,7 @@ parser.add_argument("--body", help="filename for storing state dict of MTL body 
 parser.add_argument("--seg", help="filename for storing state dict of segmentation after training", type=str, default="MTL_Seg.pt")
 parser.add_argument("--r", help="filename for storing state dict of ROI after training", type=str, default="MTL_ROI.pt")
 parser.add_argument("--epochs", help="number of training epochs", type=int, default=10)
+parser.add_argument("--rand-task", help="Randomly choose which task to update each batch", type=int, default=False)
 
 args = parser.parse_args()
 
@@ -114,7 +115,7 @@ total_losses = []
 seg_accuracy = []
 cls_accuracy = []
 
-RANDOM_WEIGHTS = False  #Trigger random optimiser steps (randomly choose which task to update each  batch)
+RANDOM_WEIGHTS = args.rand_task  #Trigger random optimiser steps (randomly choose which task to update each  batch)
 ROI_UPDATE = inc_roi   #ROI
 SEG_UPDATE = True
 
