@@ -80,12 +80,5 @@ To run the MTL test script along with the different experiments:
         --iou: csv filename for saving IOU metrics, default="IOU.csv"
         --acc: csv filename for saving accuracy metrics, default="Accuracy.csv"
         
-        
-        
-        
- ##### what folders and files are we going to include in the final submission
-     - all init.py
-     - the scripts mentioned above
-     - entire data pipeline
-     - requirements.txt
+
      
