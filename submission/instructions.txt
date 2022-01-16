@@ -1,0 +1,85 @@
+Before running any scripts there are additional packages that must be added to the environment. These packages can be found in "requirements.txt"
+
+To run our networks you first need to download our dataset (https://www.dropbox.com/s/2k039fci9gvf3ap/AllData.h5?dl=0) or run our preprocessing script (COMP0090-CW2/Coursework2/data_pipeline/DataPreprocessing.py). The resulting h5 file, "AllData.h5" should be placed in the folder "COMP0090-CW2/Coursework2/Datasets/CompleteDataset" and will be used for the entirety of the project. 
+
+The folder COMP0090-CW2/Coursework2/data_pipeline contains all the scripts that were used in our data pipeline. 
+
+The folder COMP0090-CW2/Coursework2/networks contains all the networks used in the report and also contains a subfolder "Weights" where we store out ".pt" weight files after training.
+
+
+All training and testing scripts can be found in "COMP0090-CW2/Coursework2/scripts". 
+
+To train the Unet for segmentation:
+    "python Unet_training_all_data.py"
+    
+To test Unet for segmentation:
+    "python Unet_test_all_data.py"
+
+To train Unet for segmentation and classification branching from middle:
+    "python MTL_training_no_ROI.py"
+
+To test Unet for segmentation and classification branching from middle:
+    "python MTL_test_No_ROI.py"
+
+To train Unet for segmentation and classification branching from middle, with 2 additional task specific layers for classification:
+    "python MTL_training_no_ROI_2_task_specific_layers.py"
+
+To test Unet for segmentation and classification branching from middle, with 2 additional task specific layers for classification:
+    "python MTL_test_No_ROI_2_task_specific_layers.py"
+    
+To train the Unet for segmentation and classification with the auxillary task branching off from the middle:
+    "python U_net_mid_cls_train.py"
+    
+To test Unet for segmentation and classification with the auxillary task branching off from the middle:
+    "python Unet_mid_cls_test.py"
+    
+To train the RCNN:
+    "python R-CNN_trainingv2.py"
+
+To test RCNN:
+    "python R-CNN_test.py"
+
+
+
+
+To run the MTL training script along with the different experiments:
+    "python MTL_trainingv4.py" along with any specific parameter arguments.
+    Parameters for training MTL:
+        --roi: includes ROI in MTL
+        --no-roi: exludes ROI from MTL
+        --seg-lr: segmentation learning rate, default=0.01
+        --roi-lr: ROI learning rate, default=0.0001
+        --mom: ROI and segmentation optimizer momentum, default=0.9
+        --branch: branching location - middle or end, default="middle"
+        --alpha: weighting for segmentation losses, default=1.0
+        --beta: weighting for ROI losses, default=1.0
+        --gamma: weighting for classification losses, default=1.0
+        --step: learning rate step size, default=2
+        --seg-losses: csv filename for storing segmentation losses, default="MTL_Seg_losses.csv"
+        --roi-losses: csv filename for storing ROI losses, default="MTL_ROI_losses.csv"
+        --cls-losses: csv filename for storing classification losses, default="MTL_Cls_losses.csv"
+        --body: filename for storing state dict of MTL body after training, default="MTL_Body.pt"
+        --seg: filename for storing state dict of segmentation after training, default="MTL_Seg.pt"
+        --r: filename for storing state dict of ROI after training, default="MTL_ROI.pt"
+        --epochs: number of training epochs, default=10
+        --task: does not randomly choose which task to update each batch
+        --rand-task: randomly choose which task to update each batch
+
+    
+    
+To run the MTL test script along with the different experiments:
+    "python MTL_testv4.py" along with any specific parameter arguments.
+    Parameters for testing MTL:
+        --roi: includes ROI in MTL
+        --no-roi: exludes ROI from MTL
+        --branch: branching location - middle or end, default="middle"
+        --thresh: classification threshold, default=0.5
+        --body: filename for storing state dict of MTL body after training, default="MTL_Body.pt"
+        --seg: filename for storing state dict of segmentation after training, default="MTL_Seg.pt"
+        --r: filename for storing state dict of ROI after training, default="MTL_ROI.pt"
+        --iou: csv filename for saving IOU metrics, default="IOU.csv"
+        --acc: csv filename for saving accuracy metrics, default="Accuracy.csv"
+        --dataset: dataset to use for testing - train or test, default="test"
+        
+
+     
