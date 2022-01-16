@@ -18,7 +18,7 @@ import data_pipeline.DataUtils as Utils
 parser = argparse.ArgumentParser()
 parser.add_argument('--roi', help="includes ROI in MTL, should be same as training", dest='inc_roi', action='store_true')
 parser.add_argument('--no-roi', help="exludes ROI from MTL, should be same as training", dest='inc_roi', action='store_false')
-parser.set_defaults(roi=True)
+parser.set_defaults(inc_roi=True)
 parser.add_argument("--branch", help="branching location - middle or end", default="middle")
 parser.add_argument("--thresh", help="classification threshold", type=float, default=0.5)
 parser.add_argument("--body", help="filename for loading state dict of MTL body after training", type=str, default="MTL_Body.pt")
@@ -26,6 +26,7 @@ parser.add_argument("--seg", help="filename for loading state dict of segmentati
 parser.add_argument("--r", help="filename for loading state dict of ROI after training", type=str, default="MTL_ROI.pt")
 parser.add_argument("--iou", help="csv filename for saving IOU metrics", type=str, default="IOU.csv")
 parser.add_argument("--acc", help="csv filename for saving accuracy metrics", type=str, default="Accuracy.csv")
+parser.add_argument("--dataset", help="dataset to use for testing - train or test", type=str, default="test")
 
 args = parser.parse_args()
 
@@ -35,6 +36,10 @@ if args.branch == 'middle' or args.branch == 'end':
 else:
     raise ValueError('incorrect branching specified')
 
+if args.dataset == 'train' or args.dataset == 'test':
+    data = args.dataset
+else:
+    raise ValueError('dataset selection invalid')
 
 body_filename = args.body
 seg_filename = args.seg
@@ -54,8 +59,8 @@ IN_CHANNELS = 3
 THRESH = args.thresh
 
 #Load the data in
-dataset = DatasetClass.CompletePetDataSet('CompleteDataset/AllData.h5', 'test', 'masks', 'bins')
-sub = Subset(dataset, np.arange(1, 100, 1))
+dataset = DatasetClass.CompletePetDataSet('CompleteDataset/AllData.h5', data, 'masks', 'bins')
+#sub = Subset(dataset, np.arange(1, 100, 1))
 dataloader = DataLoader(dataset, batch_size=8, shuffle=True, num_workers=0)
 
 
