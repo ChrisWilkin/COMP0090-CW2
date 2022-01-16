@@ -79,6 +79,7 @@ To run the MTL test script along with the different experiments:
         --r: filename for storing state dict of ROI after training, default="MTL_ROI.pt"
         --iou: csv filename for saving IOU metrics, default="IOU.csv"
         --acc: csv filename for saving accuracy metrics, default="Accuracy.csv"
+        --dataset: dataset to use for testing - train or test, default="test"
         
 
      
