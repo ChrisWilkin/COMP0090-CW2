@@ -217,3 +217,4 @@ with open(iou_filename, 'w') as file:
 # saving accuracy at each epoch to csv file
 with open(acc_filename, 'w') as file:
     file.write('\n'.join(str(i) for i in seg_accuracy ))
+    file.write('\n'+f'{seg_test_accuracy}')
