@@ -2,7 +2,8 @@ Before running any scripts there are additional packages that must be added to t
 
 Since we trained our networks and performed all tasks in the report on a modified dataset (approved by Prof. Yipeng Hu), 
 the person running the code must download this file. The dataset can be found at: https://www.dropbox.com/s/2k039fci9gvf3ap/AllData.h5?dl=0 . 
-The resulting h5 file, "AllData.h5" should be placed in the folder "COMP0090-CW2/Coursework2/Datasets/CompleteDataset" and will be used for the entirety of the project. 
+The resulting h5 file, "AllData.h5" should be placed in the folder "COMP0090-CW2/Coursework2/Datasets/CompleteDataset" 
+and will be used for the entirety of the project. 
 
 The folder COMP0090-CW2/Coursework2/data_pipeline contains all the scripts that were used in our data pipeline. 
 
