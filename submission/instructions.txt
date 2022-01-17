@@ -33,13 +33,6 @@ To train the Unet for segmentation and classification with the auxillary task br
 To test Unet for segmentation and classification with the auxillary task branching off from the middle:
     "python Unet_mid_cls_test.py"
     
-To train the RCNN:
-    "python R-CNN_trainingv2.py"
-
-To test RCNN:
-    "python R-CNN_test.py"
-
-
 
 
 To run the MTL training script along with the different experiments:
