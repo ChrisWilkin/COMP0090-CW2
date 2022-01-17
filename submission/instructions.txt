@@ -39,7 +39,7 @@ To test Unet for segmentation and classification with the auxillary task branchi
     
 
 
-To run the MTL training script along with the different experiments:
+To run the MTL training script along with additional experiments outlined in the report:
     "python MTL_trainingv4.py" along with any specific parameter arguments.
     Parameters for training MTL:
         --roi: includes ROI in MTL
@@ -64,7 +64,7 @@ To run the MTL training script along with the different experiments:
 
     
     
-To run the MTL test script along with the different experiments:
+To run the MTL test script along with additional experiments outlined in the report:
     "python MTL_testv4.py" along with any specific parameter arguments.
     Parameters for testing MTL:
         --roi: includes ROI in MTL
